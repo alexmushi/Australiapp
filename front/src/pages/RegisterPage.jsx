@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthCard from '../components/auth/AuthCard.jsx';
 import CustomInput from '../components/CustomInput.jsx';
+import CustomSelect from '../components/CustomSelect.jsx';
 import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
 import { FaUser, FaLock, FaMoneyBill } from 'react-icons/fa';
@@ -55,17 +56,17 @@ export default function RegisterPage({ onSwitch }) {
         >
           Contraseña
         </CustomInput>
-        <CustomInput
+        <CustomSelect
           name='currency'
           id='reg-currency'
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
-          placeholder='USD'
+          options={['USD', 'AUD', 'MXN']}
           icon={<FaMoneyBill />}
           required
         >
-          Moneda
-        </CustomInput>
+          Moneda predeterminada
+        </CustomSelect>
         <CustomButton type='submit' isPrimary>
           Registrarse
         </CustomButton>

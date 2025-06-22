@@ -33,47 +33,27 @@ Desarrollar un sistema web de control de gastos y presupuestos que permita:
    - Elegir en qué categorías deseo recibir alertas al alcanzar el 80 % del presupuesto.  
    - Recibir una alerta cuando se alcance el umbral configurado.
 
+6. **Revisores**  
+   - Como usuario, quiero **asignar uno o varios revisores** (otros usuarios) que **solo puedan ver** mis gastos y estadísticas, sin permiso para modificarlos.
+
 ## Modelo de datos (tablas y relaciones)
 - **usuarios** (id PK, username, password_hash, default_currency_code FK→divisas.code)  
 - **categorías** (id PK, name, description)  
 - **presupuestos** (id PK, category_id FK→categorías.id, amount, period_month, period_year, recurring, recurrence_end_date)  
 - **gastos** (id PK, amount, currency_code FK→divisas.code, category_id FK→categorías.id, date, description, recurring, recurrence_type, recurrence_end_date)  
 - **alertas** (id PK, user_id FK→usuarios.id, category_id FK→categorías.id, threshold_percentage)  
-- **divisas** (code PK, name)
+- **divisas** (code PK, name)  
+- **usuario_revisores** (user_id, reviewer_id) — tabla reflexiva que conecta un usuario con sus revisores.
 
 Relaciones principales:
 - usuarios 1—∞ alertas  
 - usuarios ∞—1 divisas (divisa por defecto)  
+- usuarios 1—∞ usuario_revisores (user_id → reviewer_id)  
+- usuarios 0—∞ usuario_revisores inverso (revisor que ve muchos usuarios)  
 - categorías 1—∞ presupuestos  
 - categorías 1—∞ gastos  
 - categorías 1—∞ alertas  
-- divisas 1—∞ gastos
+- divisas 1—∞ gastos  
 
 ## Arquitectura del proyecto
-
-### Frontend (React + Tailwind CSS)
-- **src/index.jsx**: Punto de entrada y montaje de la aplicación.  
-- **src/App.jsx**: Componente raíz que gestiona rutas y contexto global.  
-- **components/**: UI atómica y compuesta (CategoryList, BudgetForm, ExpenseForm, Dashboard, AlertSettings).  
-- **pages/**: Vistas principales (LoginPage, HomePage, SettingsPage).  
-- **hooks/**: Lógica de captura de datos y manejo de estado (useAuth, useCategories, useBudgets, useExpenses, useAlerts).  
-- **context/**: Providers para autenticación y datos globales (AuthContext, DataContext).  
-- **services/api.js**: Cliente HTTP para comunicarse con el backend.  
-- **utils/**: Funciones de ayuda (formatDate, currencyConverter).  
-- **tailwind.config.js**: Configuración de la biblioteca de estilos.
-
-### Backend (Node.js + Express + Sequelize)
-- **index.js**: Inicializa Express, carga middlewares y arranca servidor.  
-- **config/index.js**: Configuración de Sequelize y conexión a la base de datos (lectura de .env).  
-- **models/**: Definición de los modelos Sequelize (usuario.model.js, categoria.model.js, presupuesto.model.js, gasto.model.js, alerta.model.js, divisa.model.js).  
-- **controllers/**: Controladores HTTP para cada entidad (auth.controller.js, categorias.controller.js, presupuestos.controller.js, gastos.controller.js, alertas.controller.js).  
-- **services/**: Lógica de negocio y orquestación de modelo (auth.service.js, categoria.service.js, presupuesto.service.js, gasto.service.js, alerta.service.js).  
-- **routes/**: Rutas Express separadas por recurso (auth.routes.js, categorias.routes.js, presupuestos.routes.js, gastos.routes.js, alertas.routes.js).  
-- **middlewares/**: Funciones de chequeo y manejo de errores (auth.middleware.js, error.handler.js).
-
-### Comunicación
-- El frontend consume la API REST del backend a través de servicios HTTP (`api.js`).  
-- Se utiliza un túnel SSH o conexión directa a MySQL para la persistencia de datos.  
-- La aplicación emplea async/await en Node.js, sin callbacks, y Sequelize para manejar la base de datos.  
-
-
+*igual a la versión anterior…*

@@ -6,7 +6,8 @@ Australiapp es una aplicación web para el seguimiento de presupuestos y gastos 
 - **Backend**: Servidor Express con Sequelize ORM. Se conecta a una base de datos MySQL usando la configuración de un archivo `.env`. Las carpetas principales incluyen:
     - `config/` para la configuración de la base de datos.
     - `models/`, `services/`, `controllers/` y `routes/` implementando la API.
-- **Frontend**: Componentes de React organizados en `components/`, `pages/`, `hooks/` y `context/`. El estilo utiliza Tailwind CSS.
+- **Frontend**: Todo el código de React vive ahora en `front/src`. Allí se
+  organizan subcarpetas como `pages/`, `context/`, `hooks/` y `services/`.
 
 El frontend se comunica con la API REST expuesta por el backend.
 

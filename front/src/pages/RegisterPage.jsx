@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthCard from '../components/auth/AuthCard.jsx';
 import CustomInput from '../components/CustomInput.jsx';
@@ -6,7 +7,7 @@ import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
 import { FaUser, FaLock, FaMoneyBill } from 'react-icons/fa';
 
-export default function RegisterPage({ onSwitch }) {
+export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [currency, setCurrency] = useState('USD');
@@ -29,7 +30,7 @@ export default function RegisterPage({ onSwitch }) {
   };
 
   return (
-    <AuthCard title='Registro' description='Crea tu cuenta para comenzar' showBackButton onBack={onSwitch}>
+    <AuthCard title='Registro' description='Crea tu cuenta para comenzar'>
       {error && <AuthCardError>{error}</AuthCardError>}
       <form onSubmit={handleSubmit} noValidate>
         <CustomInput
@@ -66,6 +67,12 @@ export default function RegisterPage({ onSwitch }) {
         >
           Moneda
         </CustomInput>
+        <p className='text-sm text-gray-600 mb-4'>
+          ¿Ya tienes cuenta?{' '}
+          <Link to='/login' className='text-[#2196f3] hover:underline'>
+            Inicia sesión
+          </Link>
+        </p>
         <CustomButton type='submit' isPrimary>
           Registrarse
         </CustomButton>

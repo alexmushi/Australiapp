@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthCard from '../components/auth/AuthCard.jsx';
 import CustomInput from '../components/CustomInput.jsx';
@@ -6,7 +7,7 @@ import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
 import { FaUser, FaLock } from 'react-icons/fa';
 
-export default function LoginPage({ onSwitch }) {
+export default function LoginPage() {
   const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
@@ -62,13 +63,9 @@ export default function LoginPage({ onSwitch }) {
         </CustomInput>
         <p className='text-sm text-gray-600 mb-4'>
           ¿No tienes cuenta?{' '}
-          <button
-            type='button'
-            onClick={onSwitch}
-            className='text-[#2196f3] hover:underline bg-transparent border-none cursor-pointer'
-          >
+          <Link to='/register' className='text-[#2196f3] hover:underline'>
             Regístrate
-          </button>
+          </Link>
         </p>
         <CustomButton type='submit' isPrimary>
           Iniciar sesión

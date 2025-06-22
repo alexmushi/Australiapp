@@ -52,13 +52,13 @@ export default function AuthCard({
           {/* Figuras decorativas optimizadas para PC */}
           <div
             className='
-              absolute w-80 h-80 bg-[#D07024]
+              absolute w-80 h-80 bg-accent
               rounded-full -top-40 -right-40
             '
           />
           <div
             className='
-              absolute w-40 h-40 bg-[#D07024]
+              absolute w-40 h-40 bg-accent
               bottom-0 left-0 rounded-tr-3xl
             '
           />
@@ -69,7 +69,7 @@ export default function AuthCard({
       <div
         className='
           absolute z-0 top-0 left-0 w-96 h-96
-          rounded-full bg-[#D07024] opacity-10
+          rounded-full bg-accent opacity-10
           -translate-x-1/3 -translate-y-1/3
         '
       />

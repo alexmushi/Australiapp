@@ -4,6 +4,7 @@ import AuthCard from '../components/auth/AuthCard.jsx';
 import CustomInput from '../components/CustomInput.jsx';
 import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
+import { FaUser, FaLock } from 'react-icons/fa';
 
 export default function LoginPage({ onSwitch }) {
   const { login } = useAuth();
@@ -42,6 +43,7 @@ export default function LoginPage({ onSwitch }) {
           value={credentials.username}
           onChange={handleChange}
           placeholder='Nombre de usuario'
+          icon={<FaUser />}
           required
         >
           Usuario
@@ -53,6 +55,7 @@ export default function LoginPage({ onSwitch }) {
           value={credentials.password}
           onChange={handleChange}
           placeholder='******'
+          icon={<FaLock />}
           required
         >
           Contraseña

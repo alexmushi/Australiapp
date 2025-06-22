@@ -11,7 +11,7 @@ export default function CustomButton({
   children,
 }) {
   const primaryClasses =
-    'w-full bg-[#D07024] text-white py-2 px-4 mb-4 rounded-md hover:bg-[#bb6823] transition duration-200 cursor-pointer';
+    'w-full bg-primary text-white py-2 px-4 mb-4 rounded-md hover:bg-primary/90 transition duration-200 cursor-pointer';
   const secondaryClasses =
     'w-full bg-white text-gray-700 py-2 px-4 mb-4 rounded-md border border-gray-300 hover:bg-gray-50 transition duration-200 cursor-pointer';
   const disabledClasses =

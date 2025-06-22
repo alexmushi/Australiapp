@@ -29,6 +29,7 @@ export default function CustomInput({
   pattern,
   value,
   errorMessage,
+  icon = null,
   children,
 }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -49,21 +50,30 @@ export default function CustomInput({
           )}
         </div>
       </label>
-      <input
-        name={name}
-        id={id}
-        type={type === 'password' && showPassword ? 'text' : type}
-        placeholder={placeholder}
-        maxLength={maxLength}
-        required={required}
-        onChange={onChange}
-        value={value}
-        inputMode={inputMode}
-        pattern={pattern}
-        className={`mt-1 block w-full p-2 border-b-2 ${
-          errorMessage ? 'border-red-500' : 'border-gray-300'
-        } focus:border-[#D07024] focus:ring-[#D07024] placeholder:text-gray-400 placeholder:text-sm`}
-      />
+      <div className='relative'>
+        {icon && (
+          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-400'>
+            {icon}
+          </span>
+        )}
+        <input
+          name={name}
+          id={id}
+          type={type === 'password' && showPassword ? 'text' : type}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          required={required}
+          onChange={onChange}
+          value={value}
+          inputMode={inputMode}
+          pattern={pattern}
+          className={`mt-1 block w-full p-2 border-b-2 ${
+            icon ? 'pl-8' : ''
+          } ${
+            errorMessage ? 'border-red-500' : 'border-gray-300'
+          } focus:border-[#D07024] focus:ring-[#D07024] placeholder:text-gray-400 placeholder:text-sm`}
+        />
+      </div>
       {errorMessage && <p className='mt-1 text-sm text-red-600'>{errorMessage}</p>}
     </div>
   );

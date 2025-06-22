@@ -27,11 +27,11 @@ export default function AuthCard({
     >
       <div
         className='
-          grid grid-cols-1 lg:grid-cols-2 w-full max-w-5xl
-          rounded-lg overflow-hidden shadow-lg relative z-10
+          w-full max-w-lg
+          rounded-lg overflow-hidden shadow-lg relative z-10 bg-[#1e1e1e]
         '
       >
-        <div className='flex flex-col w-full h-full bg-[#1e1e1e] p-6 sm:p-8 md:p-10'>
+        <div className='flex flex-col w-full h-full p-6 sm:p-8 md:p-10'>
           {showBackButton && (
             <div className='mb-4'>
               <BackButton onClick={onBack} className='cursor-pointer' />
@@ -47,21 +47,6 @@ export default function AuthCard({
           </h1>
           <p className='mb-4 text-gray-300 text-sm sm:text-base'>{description}</p>
           {children}
-        </div>
-        <div className='bg-[#1e1e1e] relative hidden lg:block min-h-[500px]'>
-          {/* Figuras decorativas optimizadas para PC */}
-          <div
-            className='
-              absolute w-80 h-80 bg-[#2196f3]
-              rounded-full -top-40 -right-40
-            '
-          />
-          <div
-            className='
-              absolute w-40 h-40 bg-[#2196f3]
-              bottom-0 left-0 rounded-tr-3xl
-            '
-          />
         </div>
       </div>
 

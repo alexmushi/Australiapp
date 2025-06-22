@@ -34,7 +34,7 @@ export default function LoginPage({ onSwitch }) {
   };
 
   return (
-    <AuthCard title='Iniciar sesión' description='Es un gusto tenerte de regreso.'>
+    <AuthCard title='Iniciar sesión' description='Bienvenido a Australiapp.'>
       {error && <AuthCardError>{error}</AuthCardError>}
       <form onSubmit={handleSubmit} noValidate>
         <CustomInput

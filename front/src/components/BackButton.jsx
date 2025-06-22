@@ -9,7 +9,7 @@ export default function BackButton({ onClick, className = '' }) {
     <button
       type='button'
       onClick={onClick}
-      className={`flex items-center text-primary hover:underline ${className}`}
+      className={`flex items-center text-[#2196f3] hover:underline ${className}`}
     >
       <span className='mr-1'>&larr;</span>
       Regresar

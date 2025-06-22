@@ -65,7 +65,7 @@ export default function LoginPage({ onSwitch }) {
           <button
             type='button'
             onClick={onSwitch}
-            className='text-[#D07024] hover:underline bg-transparent border-none cursor-pointer'
+            className='text-[#2196f3] hover:underline bg-transparent border-none cursor-pointer'
           >
             Regístrate
           </button>

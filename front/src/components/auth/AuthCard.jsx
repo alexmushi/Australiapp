@@ -22,7 +22,7 @@ export default function AuthCard({
     <div
       className='
         flex justify-center items-center w-full min-h-screen
-        p-4 bg-[#f5f2eb] relative overflow-hidden
+        p-4 bg-[#121212] relative overflow-hidden
       '
     >
       <div
@@ -31,7 +31,7 @@ export default function AuthCard({
           rounded-lg overflow-hidden shadow-lg relative z-10
         '
       >
-        <div className='flex flex-col w-full h-full bg-gray-100 p-6 sm:p-8 md:p-10'>
+        <div className='flex flex-col w-full h-full bg-[#1e1e1e] p-6 sm:p-8 md:p-10'>
           {showBackButton && (
             <div className='mb-4'>
               <BackButton onClick={onBack} className='cursor-pointer' />
@@ -40,25 +40,25 @@ export default function AuthCard({
           <h1
             className='
               text-2xl sm:text-3xl font-semibold
-              text-gray-800 mb-2 font-serif
+              text-gray-100 mb-2 font-serif
             '
           >
             {title}
           </h1>
-          <p className='mb-4 text-gray-600 text-sm sm:text-base'>{description}</p>
+          <p className='mb-4 text-gray-300 text-sm sm:text-base'>{description}</p>
           {children}
         </div>
-        <div className='bg-[#1f1d1b] relative hidden lg:block min-h-[500px]'>
+        <div className='bg-[#1e1e1e] relative hidden lg:block min-h-[500px]'>
           {/* Figuras decorativas optimizadas para PC */}
           <div
             className='
-              absolute w-80 h-80 bg-accent
+              absolute w-80 h-80 bg-[#2196f3]
               rounded-full -top-40 -right-40
             '
           />
           <div
             className='
-              absolute w-40 h-40 bg-accent
+              absolute w-40 h-40 bg-[#2196f3]
               bottom-0 left-0 rounded-tr-3xl
             '
           />
@@ -69,7 +69,7 @@ export default function AuthCard({
       <div
         className='
           absolute z-0 top-0 left-0 w-96 h-96
-          rounded-full bg-accent opacity-10
+          rounded-full bg-[#2196f3] opacity-10
           -translate-x-1/3 -translate-y-1/3
         '
       />

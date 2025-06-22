@@ -36,14 +36,14 @@ export default function CustomInput({
 
   return (
     <div className='my-4'>
-      <label htmlFor={id} className='block text-sm font-medium text-gray-700'>
+      <label htmlFor={id} className='block text-sm font-medium text-white-700'>
         <div className='flex justify-between items-center w-full'>
           <span>{children}</span>
           {type === 'password' && (
             <button
               type='button'
               onClick={() => setShowPassword((p) => !p)}
-              className='text-sm text-[#D07024] hover:underline ml-2'
+              className='text-sm text-[#2196f3] hover:underline ml-2'
             >
               {showPassword ? 'Ocultar' : 'Mostrar'}
             </button>
@@ -52,7 +52,7 @@ export default function CustomInput({
       </label>
       <div className='relative'>
         {icon && (
-          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-400'>
+          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-500'>
             {icon}
           </span>
         )}
@@ -71,7 +71,7 @@ export default function CustomInput({
             icon ? 'pl-8' : ''
           } ${
             errorMessage ? 'border-red-500' : 'border-gray-300'
-          } focus:border-[#D07024] focus:ring-[#D07024] placeholder:text-gray-400 placeholder:text-sm`}
+          } focus:border-[#2196f3] focus:ring-[#2196f3] placeholder:text-gray-400 placeholder:text-sm`}
         />
       </div>
       {errorMessage && <p className='mt-1 text-sm text-red-600'>{errorMessage}</p>}

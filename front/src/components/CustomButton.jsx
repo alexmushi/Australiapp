@@ -11,11 +11,11 @@ export default function CustomButton({
   children,
 }) {
   const primaryClasses =
-    'w-full bg-primary text-white py-2 px-4 mb-4 rounded-md hover:bg-primary/90 transition duration-200 cursor-pointer';
+    'w-full bg-[#2196f3] text-white py-2 px-4 mb-4 rounded-md hover:bg-[#1976d2] transition duration-200 cursor-pointer';
   const secondaryClasses =
-    'w-full bg-white text-gray-700 py-2 px-4 mb-4 rounded-md border border-gray-300 hover:bg-gray-50 transition duration-200 cursor-pointer';
+    'w-full bg-[#1e1e1e] text-gray-200 py-2 px-4 mb-4 rounded-md border border-gray-600 hover:bg-[#2c2c2c] transition duration-200 cursor-pointer';
   const disabledClasses =
-    'w-full bg-gray-400 text-white py-2 px-4 mb-4 rounded-md cursor-not-allowed';
+    'w-full bg-gray-500 text-white py-2 px-4 mb-4 rounded-md cursor-not-allowed';
 
   return (
     <button

@@ -56,4 +56,28 @@ Relaciones principales:
 - divisas 1—∞ gastos  
 
 ## Arquitectura del proyecto
-*igual a la versión anterior…*
+
+### Frontend (React + Tailwind CSS)
+- **src/index.jsx**: Punto de entrada y montaje de la aplicación.  
+- **src/App.jsx**: Componente raíz que gestiona rutas y contexto global.  
+- **components/**: UI atómica y compuesta (CategoryList, BudgetForm, ExpenseForm, Dashboard, AlertSettings).  
+- **pages/**: Vistas principales (LoginPage, HomePage, SettingsPage).  
+- **hooks/**: Lógica de captura de datos y manejo de estado (useAuth, useCategories, useBudgets, useExpenses, useAlerts).  
+- **context/**: Providers para autenticación y datos globales (AuthContext, DataContext).  
+- **services/api.js**: Cliente HTTP para comunicarse con el backend.  
+- **utils/**: Funciones de ayuda (formatDate, currencyConverter).  
+- **tailwind.config.js**: Configuración de la biblioteca de estilos.
+
+### Backend (Node.js + Express + Sequelize)
+- **index.js**: Inicializa Express, carga middlewares y arranca servidor.  
+- **config/index.js**: Configuración de Sequelize y conexión a la base de datos (lectura de .env).  
+- **models/**: Definición de los modelos Sequelize (usuario.model.js, categoria.model.js, presupuesto.model.js, gasto.model.js, alerta.model.js, divisa.model.js).  
+- **controllers/**: Controladores HTTP para cada entidad (auth.controller.js, categorias.controller.js, presupuestos.controller.js, gastos.controller.js, alertas.controller.js).  
+- **services/**: Lógica de negocio y orquestación de modelo (auth.service.js, categoria.service.js, presupuesto.service.js, gasto.service.js, alerta.service.js).  
+- **routes/**: Rutas Express separadas por recurso (auth.routes.js, categorias.routes.js, presupuestos.routes.js, gastos.routes.js, alertas.routes.js).  
+- **middlewares/**: Funciones de chequeo y manejo de errores (auth.middleware.js, error.handler.js).
+
+### Comunicación
+- El frontend consume la API REST del backend a través de servicios HTTP (api.js).  
+- Se utiliza un túnel SSH o conexión directa a MySQL para la persistencia de datos.  
+- La aplicación emplea async/await en Node.js, sin callbacks, y Sequelize para manejar la base de datos.  

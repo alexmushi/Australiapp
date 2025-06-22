@@ -20,51 +20,35 @@ export default function AuthCard({
 }) {
   return (
     <div
-      className='
+      className="
         flex justify-center items-center w-full min-h-screen
         p-4 bg-[#121212] relative overflow-hidden
-      '
+      "
     >
       <div
-        className='
+        className="
           w-full max-w-lg
           rounded-lg overflow-hidden shadow-lg relative z-10 bg-[#1e1e1e]
-        '
+        "
       >
-        <div className='flex flex-col w-full h-full p-6 sm:p-8 md:p-10'>
+        <div className="flex flex-col w-full h-full p-6 sm:p-8 md:p-10">
           {showBackButton && (
-            <div className='mb-4'>
-              <BackButton onClick={onBack} className='cursor-pointer' />
+            <div className="mb-4">
+              <BackButton onClick={onBack} className="cursor-pointer" />
             </div>
           )}
           <h1
-            className='
+            className="
               text-2xl sm:text-3xl font-semibold
               text-gray-100 mb-2 font-serif
-            '
+            "
           >
             {title}
           </h1>
-          <p className='mb-4 text-gray-300 text-sm sm:text-base'>{description}</p>
+          <p className="mb-4 text-gray-300 text-sm sm:text-base">{description}</p>
           {children}
         </div>
       </div>
-
-      {/* Figuras decorativas en el fondo general */}
-      <div
-        className='
-          absolute z-0 top-0 left-0 w-96 h-96
-          rounded-full bg-[#2196f3] opacity-10
-          -translate-x-1/3 -translate-y-1/3
-        '
-      />
-      <div
-        className='
-          absolute z-0 bottom-0 right-0 w-96 h-96
-          rounded-full bg-black opacity-5
-          translate-x-1/4 translate-y-1/4
-        '
-      />
     </div>
   );
 }

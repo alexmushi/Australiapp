@@ -23,14 +23,19 @@
         theme: {
           extend: {
             fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: { primary: '#2a9d8f', accent: '#e76f51' },
+            colors: {
+              primary: '#2196f3',
+              accent: '#90caf9',
+              surface: '#1e1e1e',
+              background: '#121212',
+            },
           },
         },
       };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="font-sans bg-gray-50">
+  <body class="font-sans bg-[#121212] text-gray-200">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -1,43 +1,75 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import AuthCard from '../components/auth/AuthCard.jsx';
+import CustomInput from '../components/CustomInput.jsx';
+import CustomButton from '../components/CustomButton.jsx';
+import AuthCardError from '../components/auth/AuthCardError.jsx';
 
 export default function LoginPage({ onSwitch }) {
   const { login } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [error, setError] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
+    if (!credentials.username || !credentials.password) {
+      setError('Por favor, completa todos los campos.');
+      return;
+    }
+
     try {
-      await login(username, password);
+      await login(credentials.username, credentials.password);
     } catch (err) {
       console.error(err);
-      alert('Invalid credentials');
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <AuthCard title="Login" description="Sign in to your account">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-        />
-        <button type="submit">Login</button>
-        <p>
-          Don't have an account?{' '}
-          <button type="button" onClick={onSwitch}>
-            Register
+    <AuthCard title='Iniciar sesión' description='Es un gusto tenerte de regreso.'>
+      {error && <AuthCardError>{error}</AuthCardError>}
+      <form onSubmit={handleSubmit} noValidate>
+        <CustomInput
+          name='username'
+          id='username'
+          value={credentials.username}
+          onChange={handleChange}
+          placeholder='Nombre de usuario'
+          required
+        >
+          Usuario
+        </CustomInput>
+        <CustomInput
+          name='password'
+          id='password'
+          type='password'
+          value={credentials.password}
+          onChange={handleChange}
+          placeholder='******'
+          required
+        >
+          Contraseña
+        </CustomInput>
+        <p className='text-sm text-gray-600 mb-4'>
+          ¿No tienes cuenta?{' '}
+          <button
+            type='button'
+            onClick={onSwitch}
+            className='text-[#D07024] hover:underline bg-transparent border-none cursor-pointer'
+          >
+            Regístrate
           </button>
         </p>
+        <CustomButton type='submit' isPrimary>
+          Iniciar sesión
+        </CustomButton>
       </form>
     </AuthCard>
   );

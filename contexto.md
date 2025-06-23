@@ -37,13 +37,55 @@ Desarrollar un sistema web de control de gastos y presupuestos que permita:
    - Como usuario, quiero **asignar uno o varios revisores** (otros usuarios) que **solo puedan ver** mis gastos y estadísticas, sin permiso para modificarlos.
 
 ## Modelo de datos (tablas y relaciones)
-- **usuarios** (id PK, username, password_hash, default_currency_code FK→divisas.code)  
-- **categorías** (id PK, name, description)  
-- **presupuestos** (id PK, category_id FK→categorías.id, amount, period_month, period_year, recurring, recurrence_end_date)  
-- **gastos** (id PK, amount, currency_code FK→divisas.code, category_id FK→categorías.id, date, description, recurring, recurrence_type, recurrence_end_date)  
-- **alertas** (id PK, user_id FK→usuarios.id, category_id FK→categorías.id, threshold_percentage)  
-- **divisas** (code PK, name)  
-- **usuario_revisores** (user_id, reviewer_id) — tabla reflexiva que conecta un usuario con sus revisores.
+{
+  "usuarios": [
+    {"field": "id", "type": "INT", "pk": true, "fk": false, "nullable": false, "description": "Identificador único de usuario"},
+    {"field": "username", "type": "VARCHAR(50)", "pk": false, "fk": false, "nullable": false, "description": "Nombre de usuario"},
+    {"field": "password_hash", "type": "VARCHAR(255)", "pk": false, "fk": false, "nullable": false, "description": "Hash de la contraseña"},
+    {"field": "default_currency_code", "type": "CHAR(3)", "pk": false, "fk": true, "nullable": false, "fk_ref": "divisas.code", "description": "Divisa por defecto"}
+  ],
+  "categorias": [
+    {"field": "id", "type": "INT", "pk": true, "fk": false, "nullable": false, "description": "Identificador único de categoría"},
+    {"field": "name", "type": "VARCHAR(100)", "pk": false, "fk": false, "nullable": false, "description": "Nombre de la categoría"},
+    {"field": "description", "type": "VARCHAR(255)", "pk": false, "fk": false, "nullable": true, "description": "Descripción opcional"}
+  ],
+  "presupuestos": [
+    {"field": "id", "type": "INT", "pk": true, "fk": false, "nullable": false, "description": "ID de presupuesto"},
+    {"field": "category_id", "type": "INT", "pk": false, "fk": true, "nullable": false, "fk_ref": "categorias.id", "description": "Categoría asociada"},
+    {"field": "amount", "type": "DECIMAL(12,2)", "pk": false, "fk": false, "nullable": false, "description": "Monto asignado"},
+    {"field": "currency_code", "type": "CHAR(3)", "pk": false, "fk": true, "nullable": false, "fk_ref": "divisas.code", "description": "Divisa del presupuesto"},
+    {"field": "period_month", "type": "TINYINT", "pk": false, "fk": false, "nullable": false, "description": "Mes (1-12)"},
+    {"field": "period_year", "type": "SMALLINT", "pk": false, "fk": false, "nullable": false, "description": "Año"},
+    {"field": "recurring", "type": "BOOLEAN", "pk": false, "fk": false, "nullable": false, "description": "Repetición mensual"},
+    {"field": "recurrence_end_date", "type": "DATE", "pk": false, "fk": false, "nullable": true, "description": "Fecha fin de recurrencia"}
+  ],
+  "gastos": [
+    {"field": "id", "type": "INT", "pk": true, "fk": false, "nullable": false, "description": "ID de gasto"},
+    {"field": "amount", "type": "DECIMAL(12,2)", "pk": false, "fk": false, "nullable": false, "description": "Monto del gasto"},
+    {"field": "currency_code", "type": "CHAR(3)", "pk": false, "fk": true, "nullable": false, "fk_ref": "divisas.code", "description": "Divisa del gasto"},
+    {"field": "category_id", "type": "INT", "pk": false, "fk": true, "nullable": false, "fk_ref": "categorias.id", "description": "Categoría asociada"},
+    {"field": "date", "type": "DATE", "pk": false, "fk": false, "nullable": false, "description": "Fecha de gasto"},
+    {"field": "description", "type": "VARCHAR(255)", "pk": false, "fk": false, "nullable": true, "description": "Descripción opcional"},
+    {"field": "recurring", "type": "BOOLEAN", "pk": false, "fk": false, "nullable": false, "description": "Gasto recurrente"},
+    {"field": "recurrence_type", "type": "ENUM('weekly','monthly')", "pk": false, "fk": false, "nullable": true, "description": "Tipo de recurrencia"},
+    {"field": "recurrence_end_date", "type": "DATE", "pk": false, "fk": false, "nullable": true, "description": "Fin de recurrencia"}
+  ],
+  "alertas": [
+    {"field": "id", "type": "INT", "pk": true, "fk": false, "nullable": false, "description": "ID de alerta"},
+    {"field": "user_id", "type": "INT", "pk": false, "fk": true, "nullable": false, "fk_ref": "usuarios.id", "description": "Usuario configurador"},
+    {"field": "category_id", "type": "INT", "pk": false, "fk": true, "nullable": false, "fk_ref": "categorias.id", "description": "Categoría de alerta"},
+    {"field": "threshold_percentage", "type": "DECIMAL(5,2)", "pk": false, "fk": false, "nullable": false, "description": "Porcentaje umbral"}
+  ],
+  "divisas": [
+    {"field": "code", "type": "CHAR(3)", "pk": true, "fk": false, "nullable": false, "description": "Código ISO"},
+    {"field": "name", "type": "VARCHAR(50)", "pk": false, "fk": false, "nullable": false, "description": "Nombre de divisa"},
+    {"field": "value", "type": "DECIMAL(12,4)", "pk": false, "fk": false, "nullable": false, "description": "Valor en MXN por unidad de la divisa"}
+  ],
+  "usuario_revisores": [
+    {"field": "user_id", "type": "INT", "pk": true, "fk": true, "nullable": false, "fk_ref": "usuarios.id", "description": "Usuario propietario"},
+    {"field": "reviewer_id", "type": "INT", "pk": true, "fk": true, "nullable": false, "fk_ref": "usuarios.id", "description": "Usuario revisor"}
+  ]
+}
 
 Relaciones principales:
 - usuarios 1—∞ alertas  

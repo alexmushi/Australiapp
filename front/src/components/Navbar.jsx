@@ -37,7 +37,7 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
           <md-icon>account_circle</md-icon>
         </md-icon-button>
         {open && (
-          <div className='absolute right-0 mt-2 w-40 bg-[#1e1e1e] text-white rounded shadow-md p-2'>
+          <div className='absolute right-0 mt-2 w-72 bg-[#1e1e1e] text-white rounded shadow-md p-2 z-50'>
             <md-outlined-select
               className='w-full mb-2'
               value={currency}

@@ -1,5 +1,6 @@
 const API_URL = '/api/auth';
 const REVIEWER_URL = '/api/reviewers';
+const CATEGORY_URL = '/api/categories';
 
 export async function registerUser(data) {
   const res = await fetch(`${API_URL}/register`, {
@@ -28,5 +29,15 @@ export async function addReviewer(data) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to add reviewer');
+  return res.json();
+}
+
+export async function createCategory(data) {
+  const res = await fetch(CATEGORY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create category');
   return res.json();
 }

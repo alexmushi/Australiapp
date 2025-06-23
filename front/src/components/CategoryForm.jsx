@@ -6,7 +6,18 @@ import { createCategory } from '../services/api.js';
 import useCurrencies from '../hooks/useCurrencies.js';
 
 const months = [
-  '1','2','3','4','5','6','7','8','9','10','11','12'
+  { value: '1', label: 'ENE' },
+  { value: '2', label: 'FEB' },
+  { value: '3', label: 'MAR' },
+  { value: '4', label: 'ABR' },
+  { value: '5', label: 'MAY' },
+  { value: '6', label: 'JUN' },
+  { value: '7', label: 'JUL' },
+  { value: '8', label: 'AGO' },
+  { value: '9', label: 'SEP' },
+  { value: '10', label: 'OCT' },
+  { value: '11', label: 'NOV' },
+  { value: '12', label: 'DIC' },
 ];
 
 export default function CategoryForm() {

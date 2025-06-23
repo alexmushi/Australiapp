@@ -29,11 +29,20 @@ export default function CustomSelect({
           required={required}
           className={`mt-1 block w-full p-2 border-b-2 ${icon ? 'pl-8' : ''} border-gray-300 focus:border-[#2196f3] focus:ring-[#2196f3] bg-transparent text-white`}
         >
-          {options.map((opt) => (
-            <option key={opt} value={opt} className='text-black'>
-              {opt}
-            </option>
-          ))}
+          {options.map((opt) => {
+            if (typeof opt === 'object') {
+              return (
+                <option key={opt.value} value={opt.value} className='text-black'>
+                  {opt.label}
+                </option>
+              );
+            }
+            return (
+              <option key={opt} value={opt} className='text-black'>
+                {opt}
+              </option>
+            );
+          })}
         </select>
       </div>
     </div>
@@ -44,7 +53,15 @@ CustomSelect.propTypes = {
   name: PropTypes.string,
   id: PropTypes.string,
   value: PropTypes.string,
-  options: PropTypes.arrayOf(PropTypes.string),
+  options: PropTypes.arrayOf(
+    PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({
+        value: PropTypes.string,
+        label: PropTypes.string,
+      }),
+    ])
+  ),
   onChange: PropTypes.func,
   required: PropTypes.bool,
   icon: PropTypes.node,

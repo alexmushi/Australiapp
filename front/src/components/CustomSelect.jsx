@@ -12,39 +12,31 @@ export default function CustomSelect({
 }) {
   return (
     <div className='my-4'>
-      <label htmlFor={id} className='block text-sm font-medium text-white-700'>
-        {children}
-      </label>
-      <div className='relative'>
-        {icon && (
-          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-500'>
-            {icon}
-          </span>
-        )}
-        <select
-          name={name}
-          id={id}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className={`mt-1 block w-full p-2 border-b-2 ${icon ? 'pl-8' : ''} border-gray-300 focus:border-[#2196f3] focus:ring-[#2196f3] bg-transparent text-white`}
-        >
-          {options.map((opt) => {
-            if (typeof opt === 'object') {
-              return (
-                <option key={opt.value} value={opt.value} className='text-black'>
-                  {opt.label}
-                </option>
-              );
-            }
+      <md-outlined-select
+        label={String(children)}
+        name={name}
+        id={id}
+        value={value}
+        onInput={onChange}
+        required={required}
+        className='w-full'
+      >
+        {icon && <span slot='leading-icon'>{icon}</span>}
+        {options.map((opt) => {
+          if (typeof opt === 'object') {
             return (
-              <option key={opt} value={opt} className='text-black'>
-                {opt}
-              </option>
+              <md-select-option key={opt.value} value={opt.value}>
+                {opt.label}
+              </md-select-option>
             );
-          })}
-        </select>
-      </div>
+          }
+          return (
+            <md-select-option key={opt} value={opt}>
+              {opt}
+            </md-select-option>
+          );
+        })}
+      </md-outlined-select>
     </div>
   );
 }

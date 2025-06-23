@@ -25,30 +25,20 @@ export default function AuthCard({
         p-4 bg-[#121212] relative overflow-hidden
       "
     >
-      <div
-        className="
-          w-full max-w-lg
-          rounded-lg overflow-hidden shadow-lg relative z-10 bg-[#1e1e1e]
-        "
-      >
+      <md-filled-card class="w-full max-w-lg relative z-10">
         <div className="flex flex-col w-full h-full p-6 sm:p-8 md:p-10">
           {showBackButton && (
             <div className="mb-4">
               <BackButton onClick={onBack} className="cursor-pointer" />
             </div>
           )}
-          <h1
-            className="
-              text-2xl sm:text-3xl font-semibold
-              text-gray-100 mb-2 font-serif
-            "
-          >
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-2 font-serif">
             {title}
           </h1>
-          <p className="mb-4 text-gray-300 text-sm sm:text-base">{description}</p>
+          <p className="mb-4 text-sm sm:text-base">{description}</p>
           {children}
         </div>
-      </div>
+      </md-filled-card>
     </div>
   );
 }

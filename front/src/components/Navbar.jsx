@@ -6,53 +6,47 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
   const [open, setOpen] = useState(false);
   const currencies = useCurrencies();
   return (
-    <nav className='bg-[#1e1e1e] text-gray-200 p-4 flex items-center gap-4'>
-      <button
-        className='hover:underline'
-        onClick={() => onNavigate('home')}
-      >
-        Inicio
-      </button>
-      <button
-        className='hover:underline'
-        onClick={() => onNavigate('reviewer')}
-      >
-        Revisores
-      </button>
-      <button
-        className='hover:underline'
-        onClick={() => onNavigate('category')}
-      >
-        Categorías
-      </button>
-      <div className='flex-grow'></div>
-      <div className='relative'>
-        <button className='hover:underline' onClick={() => setOpen(!open)}>
-          Perfil
-        </button>
-        {open && (
-          <div className='absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-md p-2'>
-            <select
-              className='w-full mb-2 border p-1'
-              value={currency}
-              onChange={(e) => onCurrencyChange(e.target.value)}
-            >
-              {currencies.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
-            <button
-              className='w-full text-left hover:underline'
-              onClick={onLogout}
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        )}
-      </div>
-    </nav>
+    <>
+      <md-top-app-bar>
+        <md-icon-button slot='navigationIcon' onClick={() => setOpen(!open)}>
+          <span className='material-symbols-outlined'>menu</span>
+        </md-icon-button>
+        <div slot='title'>Australiapp</div>
+        <md-icon-button slot='actionItems' onClick={onLogout}>
+          <span className='material-symbols-outlined'>logout</span>
+        </md-icon-button>
+      </md-top-app-bar>
+      {open && (
+        <div className='p-4'>
+          <md-elevation></md-elevation>
+          <md-list>
+            <md-list-item onClick={() => { onNavigate('home'); setOpen(false); }}>
+              Inicio
+            </md-list-item>
+            <md-list-item onClick={() => { onNavigate('reviewer'); setOpen(false); }}>
+              Revisores
+            </md-list-item>
+            <md-list-item onClick={() => { onNavigate('category'); setOpen(false); }}>
+              Categorías
+            </md-list-item>
+            <md-list-item>
+              <md-outlined-select
+                value={currency}
+                label='Moneda'
+                onInput={(e) => onCurrencyChange(e.target.value)}
+                className='w-full'
+              >
+                {currencies.map((code) => (
+                  <md-select-option key={code} value={code}>
+                    {code}
+                  </md-select-option>
+                ))}
+              </md-outlined-select>
+            </md-list-item>
+          </md-list>
+        </div>
+      )}
+    </>
   );
 }
 

@@ -1,9 +1,23 @@
+:root {
+  color-scheme: dark;
+  --md-sys-color-primary: #2196f3;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-secondary: #03dac6;
+  --md-sys-color-on-secondary: #000000;
+  --md-sys-color-background: #121212;
+  --md-sys-color-on-background: #ffffff;
+  --md-sys-color-surface: #1e1e1e;
+  --md-sys-color-on-surface: #ffffff;
+  --md-sys-color-error: #cf6679;
+  --md-sys-color-outline: #8c8c8c;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  background-color: #121212;
-  color: #e0e0e0;
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
   min-height: 100vh;
 }
 
@@ -39,5 +53,5 @@ button {
 input[type="text"],
 input[type="password"],
 textarea {
-  color: #000;
+  color: var(--md-sys-color-on-surface);
 }

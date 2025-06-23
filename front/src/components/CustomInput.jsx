@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '@material/web/textfield/outlined-text-field.js';
 
 /**
  * Componente de entrada personalizado.
@@ -14,7 +15,6 @@ import { useState } from 'react';
  * @param {string} [param0.inputMode]
  * @param {string} [param0.pattern]
  * @param {string} [param0.value]
- * @param {string} [param0.errorMessage]
  * @param {React.ReactNode} param0.children
  */
 export default function CustomInput({
@@ -28,53 +28,27 @@ export default function CustomInput({
   inputMode,
   pattern,
   value,
-  errorMessage,
   icon = null,
   children,
 }) {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword] = useState(false);
 
   return (
-    <div className='my-4'>
-      <label htmlFor={id} className='block text-sm font-medium text-white-700'>
-        <div className='flex justify-between items-center w-full'>
-          <span>{children}</span>
-          {type === 'password' && (
-            <button
-              type='button'
-              onClick={() => setShowPassword((p) => !p)}
-              className='text-sm text-[#2196f3] hover:underline ml-2'
-            >
-              {showPassword ? 'Ocultar' : 'Mostrar'}
-            </button>
-          )}
-        </div>
-      </label>
-      <div className='relative'>
-        {icon && (
-          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-500'>
-            {icon}
-          </span>
-        )}
-        <input
-          name={name}
-          id={id}
-          type={type === 'password' && showPassword ? 'text' : type}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          required={required}
-          onChange={onChange}
-          value={value}
-          inputMode={inputMode}
-          pattern={pattern}
-          className={`mt-1 block w-full p-2 border-b-2 ${
-            icon ? 'pl-8' : ''
-          } ${
-            errorMessage ? 'border-red-500' : 'border-gray-300'
-          } focus:border-[#2196f3] focus:ring-[#2196f3] placeholder:text-gray-400 placeholder:text-sm`}
-        />
-      </div>
-      {errorMessage && <p className='mt-1 text-sm text-red-600'>{errorMessage}</p>}
-    </div>
+    <md-outlined-text-field
+      label={children}
+      name={name}
+      id={id}
+      type={type === 'password' && showPassword ? 'text' : type}
+      placeholder={placeholder}
+      maxlength={maxLength}
+      required={required}
+      value={value}
+      inputmode={inputMode}
+      pattern={pattern}
+      class='w-full mb-4'
+      onInput={onChange}
+    >
+      {icon && <span slot='leading-icon'>{icon}</span>}
+    </md-outlined-text-field>
   );
 }

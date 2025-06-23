@@ -1,4 +1,6 @@
 import PropTypes from 'prop-types';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 
 export default function CustomSelect({
   name,
@@ -11,41 +13,31 @@ export default function CustomSelect({
   children,
 }) {
   return (
-    <div className='my-4'>
-      <label htmlFor={id} className='block text-sm font-medium text-white-700'>
-        {children}
-      </label>
-      <div className='relative'>
-        {icon && (
-          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-500'>
-            {icon}
-          </span>
-        )}
-        <select
-          name={name}
-          id={id}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className={`mt-1 block w-full p-2 border-b-2 ${icon ? 'pl-8' : ''} border-gray-300 focus:border-[#2196f3] focus:ring-[#2196f3] bg-transparent text-white`}
-        >
-          {options.map((opt) => {
-            if (typeof opt === 'object') {
-              return (
-                <option key={opt.value} value={opt.value} className='text-black'>
-                  {opt.label}
-                </option>
-              );
-            }
-            return (
-              <option key={opt} value={opt} className='text-black'>
-                {opt}
-              </option>
-            );
-          })}
-        </select>
-      </div>
-    </div>
+    <md-outlined-select
+      name={name}
+      id={id}
+      value={value}
+      required={required}
+      class='w-full mb-4'
+      onInput={onChange}
+    >
+      <span slot='label'>{children}</span>
+      {icon && <span slot='leading-icon'>{icon}</span>}
+      {options.map((opt) => {
+        if (typeof opt === 'object') {
+          return (
+            <md-select-option key={opt.value} value={opt.value}>
+              {opt.label}
+            </md-select-option>
+          );
+        }
+        return (
+          <md-select-option key={opt} value={opt}>
+            {opt}
+          </md-select-option>
+        );
+      })}
+    </md-outlined-select>
   );
 }
 

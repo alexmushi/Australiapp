@@ -74,12 +74,12 @@ export default function LoginPage({ onSwitch }) {
           />
           <span>Recuérdame</span>
         </label>
-        <p className='text-sm text-gray-600 mb-4'>
+        <p className='text-sm text-on-surface/70 mb-4'>
           ¿No tienes cuenta?{' '}
           <button
             type='button'
             onClick={onSwitch}
-            className='text-[#2196f3] hover:underline bg-transparent border-none cursor-pointer'
+            className='text-primary hover:underline bg-transparent border-none cursor-pointer'
           >
             Regístrate
           </button>

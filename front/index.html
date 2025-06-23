@@ -22,9 +22,14 @@
             fontFamily: { sans: ['Roboto', 'sans-serif'] },
             colors: {
               primary: '#2196f3',
+              secondary: '#03dac6',
+              success: '#4caf50',
+              error: '#cf6679',
               accent: '#90caf9',
               surface: '#1e1e1e',
               background: '#121212',
+              'on-surface': '#ffffff',
+              'on-background': '#ffffff',
             },
           },
         },
@@ -32,7 +37,7 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="font-sans bg-[#121212] text-gray-200">
+  <body class="font-sans bg-background text-on-background">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

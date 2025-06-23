@@ -22,13 +22,13 @@ export default function AuthCard({
     <div
       className="
         flex justify-center items-center w-full min-h-screen
-        p-4 bg-[#121212] relative overflow-hidden
+        p-4 bg-background relative overflow-hidden
       "
     >
       <div
         className="
           w-full max-w-lg
-          rounded-lg overflow-hidden shadow-lg relative z-10 bg-[#1e1e1e]
+          rounded-lg overflow-hidden shadow-lg relative z-10 bg-surface
         "
       >
         <div className="flex flex-col w-full h-full p-6 sm:p-8 md:p-10">
@@ -40,12 +40,12 @@ export default function AuthCard({
           <h1
             className="
               text-2xl sm:text-3xl font-semibold
-              text-gray-100 mb-2 font-serif
+              text-on-surface mb-2 font-serif
             "
           >
             {title}
           </h1>
-          <p className="mb-4 text-gray-300 text-sm sm:text-base">{description}</p>
+          <p className="mb-4 text-on-surface/70 text-sm sm:text-base">{description}</p>
           {children}
         </div>
       </div>

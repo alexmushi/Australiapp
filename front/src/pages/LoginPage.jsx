@@ -9,11 +9,16 @@ import { FaUser, FaLock } from 'react-icons/fa';
 export default function LoginPage({ onSwitch }) {
   const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRememberChange = (e) => {
+    setRemember(e.target.checked);
   };
 
   const handleSubmit = async (e) => {
@@ -26,7 +31,7 @@ export default function LoginPage({ onSwitch }) {
     }
 
     try {
-      await login(credentials.username, credentials.password);
+      await login(credentials.username, credentials.password, remember);
     } catch (err) {
       console.error(err);
       setError('Invalid credentials');
@@ -60,6 +65,15 @@ export default function LoginPage({ onSwitch }) {
         >
           Contraseña
         </CustomInput>
+        <label className='flex items-center gap-2 mb-4'>
+          <input
+            type='checkbox'
+            checked={remember}
+            onChange={handleRememberChange}
+            className='form-checkbox'
+          />
+          <span>Recuérdame</span>
+        </label>
         <p className='text-sm text-gray-600 mb-4'>
           ¿No tienes cuenta?{' '}
           <button

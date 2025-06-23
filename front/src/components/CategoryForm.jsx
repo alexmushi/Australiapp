@@ -109,8 +109,8 @@ export default function CategoryForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      {error && <p className='text-red-500 mb-2'>{error}</p>}
-      {message && <p className='text-green-500 mb-2'>{message}</p>}
+      {error && <p className='text-error mb-2'>{error}</p>}
+      {message && <p className='text-accent mb-2'>{message}</p>}
       <CustomInput
         name='name'
         id='name'

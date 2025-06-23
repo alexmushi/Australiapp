@@ -10,6 +10,19 @@
   --md-sys-color-on-surface: #ffffff;
   --md-sys-color-error: #cf6679;
   --md-sys-color-outline: #8c8c8c;
+  /* Dropdown theming */
+  --md-menu-container-color: var(--md-sys-color-surface);
+  --md-menu-item-container-color: var(--md-sys-color-surface);
+  --md-menu-item-label-text-color: var(--md-sys-color-on-surface);
+  --md-menu-item-selected-container-color: var(--md-sys-color-primary);
+
+  --md-outlined-select-text-field-input-text-color: var(--md-sys-color-on-surface);
+  --md-outlined-select-text-field-label-text-color: var(--md-sys-color-on-surface);
+  --md-outlined-select-text-field-leading-icon-color: var(--md-sys-color-on-surface);
+  --md-outlined-select-text-field-trailing-icon-color: var(--md-sys-color-on-surface);
+  --md-outlined-select-text-field-outline-color: var(--md-sys-color-outline);
+  --md-outlined-select-text-field-hover-outline-color: var(--md-sys-color-on-surface);
+  --md-outlined-select-text-field-focus-outline-color: var(--md-sys-color-primary);
 }
 
 body {

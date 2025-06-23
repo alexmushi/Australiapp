@@ -1,4 +1,7 @@
 import PropTypes from 'prop-types';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
+import '@material/web/icon/icon.js';
 
 export default function CustomSelect({
   name,
@@ -12,39 +15,25 @@ export default function CustomSelect({
 }) {
   return (
     <div className='my-4'>
-      <label htmlFor={id} className='block text-sm font-medium text-white-700'>
-        {children}
-      </label>
-      <div className='relative'>
-        {icon && (
-          <span className='absolute left-2 top-1/2 -translate-y-1/2 text-gray-500'>
-            {icon}
-          </span>
-        )}
-        <select
-          name={name}
-          id={id}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className={`mt-1 block w-full p-2 border-b-2 ${icon ? 'pl-8' : ''} border-gray-300 focus:border-[#2196f3] focus:ring-[#2196f3] bg-transparent text-white`}
-        >
-          {options.map((opt) => {
-            if (typeof opt === 'object') {
-              return (
-                <option key={opt.value} value={opt.value} className='text-black'>
-                  {opt.label}
-                </option>
-              );
-            }
-            return (
-              <option key={opt} value={opt} className='text-black'>
-                {opt}
-              </option>
-            );
-          })}
-        </select>
-      </div>
+      <md-outlined-select
+        name={name}
+        id={id}
+        label={children}
+        value={value}
+        required={required}
+        oninput={onChange}
+      >
+        {icon && <md-icon slot='leading-icon'>{icon}</md-icon>}
+        {options.map((opt) => {
+          const val = typeof opt === 'object' ? opt.value : opt;
+          const label = typeof opt === 'object' ? opt.label : opt;
+          return (
+            <md-select-option key={val} value={val}>
+              {label}
+            </md-select-option>
+          );
+        })}
+      </md-outlined-select>
     </div>
   );
 }

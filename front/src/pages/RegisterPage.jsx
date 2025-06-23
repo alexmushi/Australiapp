@@ -5,7 +5,6 @@ import CustomInput from '../components/CustomInput.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
-import { FaUser, FaLock, FaMoneyBill } from 'react-icons/fa';
 import useCurrencies from '../hooks/useCurrencies.js';
 
 export default function RegisterPage({ onSwitch }) {
@@ -47,7 +46,7 @@ export default function RegisterPage({ onSwitch }) {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder='Nombre de usuario'
-          icon={<FaUser />}
+          icon='person'
           required
         >
           Usuario
@@ -59,7 +58,7 @@ export default function RegisterPage({ onSwitch }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder='******'
-          icon={<FaLock />}
+          icon='lock'
           required
         >
           Contraseña
@@ -70,7 +69,7 @@ export default function RegisterPage({ onSwitch }) {
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
           options={currencies}
-          icon={<FaMoneyBill />}
+          icon='attach_money'
           required
         >
           Moneda predeterminada

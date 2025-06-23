@@ -1,4 +1,6 @@
 import React from 'react';
+import '@material/web/button/text-button.js';
+import '@material/web/icon/icon.js';
 
 /**
  * Simple back button with an arrow icon.
@@ -6,13 +8,9 @@ import React from 'react';
  */
 export default function BackButton({ onClick, className = '' }) {
   return (
-    <button
-      type='button'
-      onClick={onClick}
-      className={`flex items-center text-[#2196f3] hover:underline ${className}`}
-    >
-      <span className='mr-1'>&larr;</span>
+    <md-text-button onClick={onClick} className={className}>
+      <md-icon slot='icon'>arrow_back</md-icon>
       Regresar
-    </button>
+    </md-text-button>
   );
 }

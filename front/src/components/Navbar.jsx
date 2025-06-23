@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import useCurrencies from '../hooks/useCurrencies.js';
 
 export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChange }) {
   const [open, setOpen] = useState(false);
+  const currencies = useCurrencies();
   return (
     <nav className='bg-[#1e1e1e] text-gray-200 p-4 flex items-center gap-4'>
       <button
@@ -35,9 +37,11 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
               value={currency}
               onChange={(e) => onCurrencyChange(e.target.value)}
             >
-              <option value='USD'>USD</option>
-              <option value='AUD'>AUD</option>
-              <option value='MXN'>MXN</option>
+              {currencies.map((code) => (
+                <option key={code} value={code}>
+                  {code}
+                </option>
+              ))}
             </select>
             <button
               className='w-full text-left hover:underline'

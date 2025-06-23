@@ -3,6 +3,7 @@ import CustomInput from './CustomInput.jsx';
 import CustomButton from './CustomButton.jsx';
 import CustomSelect from './CustomSelect.jsx';
 import { createCategory } from '../services/api.js';
+import useCurrencies from '../hooks/useCurrencies.js';
 
 const months = [
   '1','2','3','4','5','6','7','8','9','10','11','12'
@@ -14,7 +15,8 @@ export default function CategoryForm() {
   const [description, setDescription] = useState('');
   const [recurring, setRecurring] = useState(true);
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const currencies = useCurrencies();
+  const [currency, setCurrency] = useState('');
   const [startMonth, setStartMonth] = useState('1');
   const [startYear, setStartYear] = useState(String(currentYear));
   const [endMonth, setEndMonth] = useState('12');
@@ -24,6 +26,12 @@ export default function CategoryForm() {
   ]);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+
+  React.useEffect(() => {
+    if (!currency && currencies.length > 0) {
+      setCurrency(currencies[0]);
+    }
+  }, [currencies, currency]);
 
   const handleAddMonth = () => {
     const last = budgets[budgets.length - 1];
@@ -80,7 +88,7 @@ export default function CategoryForm() {
       setName('');
       setDescription('');
       setAmount('');
-      setCurrency('USD');
+      setCurrency(currencies[0] ?? '');
       setBudgets([{ month: '1', year: String(currentYear), amount: '' }]);
     } catch (err) {
       console.error(err);
@@ -126,7 +134,7 @@ export default function CategoryForm() {
         id='currency'
         value={currency}
         onChange={(e) => setCurrency(e.target.value)}
-        options={['USD', 'AUD', 'MXN']}
+        options={currencies}
         required
       >
         Divisa del presupuesto

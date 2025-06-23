@@ -2,6 +2,7 @@ const API_URL = '/api/auth';
 const REVIEWER_URL = '/api/reviewers';
 const CATEGORY_URL = '/api/categorias';
 const USER_URL = '/api/users';
+const DIVISA_URL = '/api/divisas';
 
 export async function registerUser(data) {
   const res = await fetch(`${API_URL}/register`, {
@@ -50,5 +51,11 @@ export async function updateUserCurrency(userId, code) {
     body: JSON.stringify({ code }),
   });
   if (!res.ok) throw new Error('Failed to update currency');
+  return res.json();
+}
+
+export async function fetchCurrencies() {
+  const res = await fetch(DIVISA_URL);
+  if (!res.ok) throw new Error('Failed to fetch currencies');
   return res.json();
 }

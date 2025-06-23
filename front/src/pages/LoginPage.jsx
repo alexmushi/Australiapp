@@ -66,12 +66,10 @@ export default function LoginPage({ onSwitch }) {
           Contraseña
         </CustomInput>
         <label className='flex items-center gap-2 mb-4'>
-          <input
-            type='checkbox'
+          <md-checkbox
             checked={remember}
             onChange={handleRememberChange}
-            className='form-checkbox'
-          />
+          ></md-checkbox>
           <span>Recuérdame</span>
         </label>
         <p className='text-sm text-gray-600 mb-4'>

@@ -25,12 +25,7 @@ export default function AuthCard({
         p-4 bg-[#121212] relative overflow-hidden
       "
     >
-      <div
-        className="
-          w-full max-w-lg
-          rounded-lg overflow-hidden shadow-lg relative z-10 bg-[#1e1e1e]
-        "
-      >
+      <md-elevated-card class="w-full max-w-lg relative z-10 bg-[#1e1e1e]">
         <div className="flex flex-col w-full h-full p-6 sm:p-8 md:p-10">
           {showBackButton && (
             <div className="mb-4">
@@ -48,7 +43,7 @@ export default function AuthCard({
           <p className="mb-4 text-gray-300 text-sm sm:text-base">{description}</p>
           {children}
         </div>
-      </div>
+      </md-elevated-card>
     </div>
   );
 }

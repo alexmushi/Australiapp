@@ -132,11 +132,10 @@ export default function CategoryForm() {
       </CustomInput>
       <div className='my-4'>
         <label className='flex items-center gap-2'>
-          <input
-            type='checkbox'
+          <md-checkbox
             checked={recurring}
             onChange={(e) => setRecurring(e.target.checked)}
-          />
+          ></md-checkbox>
           <span>Presupuesto recurrente</span>
         </label>
       </div>

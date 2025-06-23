@@ -3,6 +3,7 @@ import cors from 'cors';
 import { testConnection, sequelize } from './config/index.js';
 import authRoutes from './routes/auth.routes.js';
 import reviewerRoutes from './routes/reviewers.routes.js';
+import categoriaRoutes from './routes/categorias.routes.js';
 
 const app = express();
 app.use(cors());
@@ -11,6 +12,7 @@ app.use(express.json());
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/reviewers', reviewerRoutes);
+app.use('/api/categorias', categoriaRoutes);
 
 async function start() {
   await testConnection();

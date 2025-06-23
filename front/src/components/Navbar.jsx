@@ -16,6 +16,12 @@ export default function Navbar({ onNavigate, onLogout }) {
       >
         Revisores
       </button>
+      <button
+        className='hover:underline'
+        onClick={() => onNavigate('category')}
+      >
+        Categorías
+      </button>
       <div className='flex-grow'></div>
       <button className='hover:underline' onClick={onLogout}>
         Cerrar sesión

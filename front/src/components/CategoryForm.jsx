@@ -14,6 +14,7 @@ export default function CategoryForm() {
   const [description, setDescription] = useState('');
   const [recurring, setRecurring] = useState(true);
   const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [startMonth, setStartMonth] = useState('1');
   const [startYear, setStartYear] = useState(String(currentYear));
   const [endMonth, setEndMonth] = useState('12');
@@ -54,6 +55,7 @@ export default function CategoryForm() {
           description,
           recurring: true,
           amount: parseFloat(amount),
+          currency_code: currency,
           start_month: Number(startMonth),
           start_year: Number(startYear),
           end_month: Number(endMonth),
@@ -68,6 +70,7 @@ export default function CategoryForm() {
             month: Number(b.month),
             year: Number(b.year),
             amount: parseFloat(b.amount),
+            currency_code: currency,
           })),
         };
       }
@@ -77,6 +80,7 @@ export default function CategoryForm() {
       setName('');
       setDescription('');
       setAmount('');
+      setCurrency('USD');
       setBudgets([{ month: '1', year: String(currentYear), amount: '' }]);
     } catch (err) {
       console.error(err);
@@ -117,6 +121,16 @@ export default function CategoryForm() {
           <span>Presupuesto recurrente</span>
         </label>
       </div>
+        <CustomSelect
+        name='currency'
+        id='currency'
+        value={currency}
+        onChange={(e) => setCurrency(e.target.value)}
+        options={['USD', 'AUD', 'MXN']}
+        required
+      >
+        Divisa del presupuesto
+      </CustomSelect>
       {recurring ? (
         <>
           <CustomInput

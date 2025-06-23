@@ -6,6 +6,7 @@ export const Divisa = sequelize.define(
   {
     code: { type: DataTypes.STRING(3), primaryKey: true },
     name: { type: DataTypes.STRING(50), allowNull: false },
+    value: { type: DataTypes.DECIMAL(12, 4), allowNull: false },
   },
   {
     tableName: 'divisas',

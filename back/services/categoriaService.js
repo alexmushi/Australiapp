@@ -3,7 +3,7 @@ import { Categoria } from '../models/categoria.model.js';
 import { Presupuesto } from '../models/presupuesto.model.js';
 
 export async function createCategoryWithBudget(data) {
-  const { name, description, recurring } = data;
+  const { name, description, recurring, currency_code } = data;
   return sequelize.transaction(async (t) => {
     const category = await Categoria.create({ name, description }, { transaction: t });
 
@@ -14,7 +14,8 @@ export async function createCategoryWithBudget(data) {
         start_month == null ||
         start_year == null ||
         end_month == null ||
-        end_year == null
+        end_year == null ||
+        !currency_code
       ) {
         throw new Error('Missing fields for recurring budget');
       }
@@ -23,6 +24,7 @@ export async function createCategoryWithBudget(data) {
         {
           category_id: category.id,
           amount,
+          currency_code,
           period_month: Number(start_month),
           period_year: Number(start_year),
           recurring: true,
@@ -36,13 +38,14 @@ export async function createCategoryWithBudget(data) {
       }
       for (const b of data.budgets) {
         const { amount, month, year } = b;
-        if (amount == null || month == null || year == null) {
+        if (amount == null || month == null || year == null || !currency_code) {
           throw new Error('Invalid budget entry');
         }
         await Presupuesto.create(
           {
             category_id: category.id,
             amount,
+            currency_code,
             period_month: Number(month),
             period_year: Number(year),
             recurring: false,

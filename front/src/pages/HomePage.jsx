@@ -5,7 +5,7 @@ import CategoryForm from '../components/CategoryForm.jsx';
 import Navbar from '../components/Navbar.jsx';
 
 export default function HomePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, changeCurrency } = useAuth();
   const [view, setView] = useState('home');
 
   let content = (
@@ -30,7 +30,12 @@ export default function HomePage() {
 
   return (
     <div>
-      <Navbar onNavigate={setView} onLogout={logout} />
+      <Navbar
+        onNavigate={setView}
+        onLogout={logout}
+        currency={user.default_currency_code}
+        onCurrencyChange={changeCurrency}
+      />
       {content}
     </div>
   );

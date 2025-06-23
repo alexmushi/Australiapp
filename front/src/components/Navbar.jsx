@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-export default function Navbar({ onNavigate, onLogout }) {
+export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChange }) {
+  const [open, setOpen] = useState(false);
   return (
     <nav className='bg-[#1e1e1e] text-gray-200 p-4 flex items-center gap-4'>
       <button
@@ -23,9 +24,30 @@ export default function Navbar({ onNavigate, onLogout }) {
         Categorías
       </button>
       <div className='flex-grow'></div>
-      <button className='hover:underline' onClick={onLogout}>
-        Cerrar sesión
-      </button>
+      <div className='relative'>
+        <button className='hover:underline' onClick={() => setOpen(!open)}>
+          Perfil
+        </button>
+        {open && (
+          <div className='absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-md p-2'>
+            <select
+              className='w-full mb-2 border p-1'
+              value={currency}
+              onChange={(e) => onCurrencyChange(e.target.value)}
+            >
+              <option value='USD'>USD</option>
+              <option value='AUD'>AUD</option>
+              <option value='MXN'>MXN</option>
+            </select>
+            <button
+              className='w-full text-left hover:underline'
+              onClick={onLogout}
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
@@ -33,4 +55,6 @@ export default function Navbar({ onNavigate, onLogout }) {
 Navbar.propTypes = {
   onNavigate: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
+  currency: PropTypes.string.isRequired,
+  onCurrencyChange: PropTypes.func.isRequired,
 };

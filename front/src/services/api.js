@@ -1,6 +1,7 @@
 const API_URL = '/api/auth';
 const REVIEWER_URL = '/api/reviewers';
 const CATEGORY_URL = '/api/categorias';
+const USER_URL = '/api/users';
 
 export async function registerUser(data) {
   const res = await fetch(`${API_URL}/register`, {
@@ -39,5 +40,15 @@ export async function createCategory(data) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to create category');
+  return res.json();
+}
+
+export async function updateUserCurrency(userId, code) {
+  const res = await fetch(`${USER_URL}/${userId}/currency`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+  if (!res.ok) throw new Error('Failed to update currency');
   return res.json();
 }

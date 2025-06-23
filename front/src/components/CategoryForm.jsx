@@ -31,7 +31,7 @@ export default function CategoryForm() {
     if (!currency && currencies.length > 0) {
       setCurrency(currencies[0]);
     }
-  }, [currencies]);
+  }, [currencies, currency]);
 
   const handleAddMonth = () => {
     const last = budgets[budgets.length - 1];

@@ -6,11 +6,19 @@ import CustomSelect from '../components/CustomSelect.jsx';
 import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
 import { FaUser, FaLock, FaMoneyBill } from 'react-icons/fa';
+import useCurrencies from '../hooks/useCurrencies.js';
 
 export default function RegisterPage({ onSwitch }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const currencies = useCurrencies();
+  const [currency, setCurrency] = useState('');
+
+  React.useEffect(() => {
+    if (!currency && currencies.length > 0) {
+      setCurrency(currencies[0]);
+    }
+  }, [currencies]);
   const { register } = useAuth();
   const [error, setError] = useState(null);
 
@@ -61,7 +69,7 @@ export default function RegisterPage({ onSwitch }) {
           id='reg-currency'
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
-          options={['USD', 'AUD', 'MXN']}
+          options={currencies}
           icon={<FaMoneyBill />}
           required
         >

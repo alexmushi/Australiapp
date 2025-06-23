@@ -35,3 +35,9 @@ button {
 .bounce-slow {
   animation: bounceAnim 10s ease-in-out infinite alternate;
 }
+
+input[type="text"],
+input[type="password"],
+textarea {
+  color: #000;
+}

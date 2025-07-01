@@ -30,6 +30,12 @@ export async function getSummary(range = 'month') {
   }
 
   const categories = await Categoria.findAll({ attributes: ['id', 'name'] });
+  const expensesAll = await Gasto.findAll({
+    where: { date: { [Op.between]: [start, end] } },
+    attributes: ['id', 'amount', 'category_id', 'date', 'description'],
+    order: [['date', 'ASC']],
+  });
+
   const result = [];
   let totalBudget = 0;
   let totalExpenses = 0;
@@ -54,14 +60,11 @@ export async function getSummary(range = 'month') {
       }
     }
 
-    const expenses = await Gasto.sum('amount', {
-      where: {
-        category_id: cat.id,
-        date: { [Op.between]: [start, end] },
-      },
-    });
-
-    const spent = parseFloat(expenses || 0);
+    const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
+    const spent = catExpenses.reduce(
+      (sum, e) => sum + parseFloat(e.amount),
+      0
+    );
     totalBudget += budget;
     totalExpenses += spent;
     result.push({ id: cat.id, name: cat.name, budget, expenses: spent });
@@ -71,5 +74,26 @@ export async function getSummary(range = 'month') {
     categories: result,
     totalBudget,
     totalExpenses,
+    expenses: expensesAll.map((e) => ({
+      id: e.id,
+      category_id: e.category_id,
+      amount: parseFloat(e.amount),
+      date: e.date,
+      description: e.description,
+    })),
+  };
+}
+
+export async function getCategoryDetail(id, range = 'month') {
+  const summary = await getSummary(range);
+  const cat = summary.categories.find((c) => c.id === Number(id));
+  if (!cat) throw new Error('Categoria no encontrada');
+  const expenses = summary.expenses.filter((e) => e.category_id === Number(id));
+  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+  return {
+    id: cat.id,
+    name: cat.name,
+    budget: cat.budget,
+    expenses: { total, items: expenses },
   };
 }

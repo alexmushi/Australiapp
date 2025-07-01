@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { fetchReport } from '../services/api.js';
 
-export default function useReport(range) {
+export default function useReport(range, category) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
     let active = true;
-    fetchReport(range)
+    setData(null); 
+    fetchReport(range, category)
       .then((d) => {
         if (active) setData(d);
       })
@@ -14,7 +15,7 @@ export default function useReport(range) {
     return () => {
       active = false;
     };
-  }, [range]);
+  }, [range, category]);
 
   return data;
 }

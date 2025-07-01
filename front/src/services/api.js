@@ -78,8 +78,12 @@ export async function createExpense(data) {
   return res.json();
 }
 
-export async function fetchReport(range = 'month') {
-  const res = await fetch(`${REPORT_URL}/summary?range=${range}`);
+export async function fetchReport(range = 'month', category = 'all') {
+  const url =
+    category === 'all'
+      ? `${REPORT_URL}/summary?range=${range}`
+      : `${REPORT_URL}/category/${category}?range=${range}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch report');
   return res.json();
 }

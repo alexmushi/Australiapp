@@ -8,6 +8,7 @@ import usuarioRoutes from './routes/usuarios.routes.js';
 import divisaRoutes from './routes/divisas.routes.js';
 import gastoRoutes from './routes/gastos.routes.js';
 import { startRecurringExpenseJob } from './cron/recurringExpenses.js';
+import { startDivisaUpdateJob } from './cron/updateDivisas.js';
 
 const app = express();
 app.use(cors());
@@ -25,6 +26,7 @@ async function start() {
   await testConnection();
   await sequelize.sync();
   startRecurringExpenseJob();
+  startDivisaUpdateJob();
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`🚀 Backend corriendo en puerto ${port}`));
 }

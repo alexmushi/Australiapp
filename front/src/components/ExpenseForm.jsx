@@ -14,7 +14,7 @@ const recurrenceOptions = [
 export default function ExpenseForm() {
   const currencies = useCurrencies();
   const categories = useCategories();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' });
 
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('');

@@ -6,6 +6,7 @@ import reviewerRoutes from './routes/reviewers.routes.js';
 import categoriaRoutes from './routes/categorias.routes.js';
 import usuarioRoutes from './routes/usuarios.routes.js';
 import divisaRoutes from './routes/divisas.routes.js';
+import gastoRoutes from './routes/gastos.routes.js';
 
 const app = express();
 app.use(cors());
@@ -17,6 +18,7 @@ app.use('/api/reviewers', reviewerRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/users', usuarioRoutes);
 app.use('/api/divisas', divisaRoutes);
+app.use('/api/gastos', gastoRoutes);
 
 async function start() {
   await testConnection();

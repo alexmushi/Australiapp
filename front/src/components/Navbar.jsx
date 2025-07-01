@@ -31,6 +31,12 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
       >
         Categorías
       </button>
+      <button
+        className='hover:underline'
+        onClick={() => onNavigate('expense')}
+      >
+        Registrar gasto
+      </button>
       <div className='flex-grow'></div>
       <div className='relative'>
         <md-icon-button onClick={() => setOpen(!open)}>

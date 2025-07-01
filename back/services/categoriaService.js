@@ -57,3 +57,10 @@ export async function createCategoryWithBudget(data) {
     return category.toJSON();
   });
 }
+export async function listCategorias() {
+  const categorias = await Categoria.findAll({
+    attributes: ['id', 'name'],
+    order: [['name', 'ASC']],
+  });
+  return categorias.map((c) => c.toJSON());
+}

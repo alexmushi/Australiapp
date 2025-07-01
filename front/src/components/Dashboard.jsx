@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
+import useSummaryTable from '../hooks/useSummaryTable.js';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const [range, setRange] = useState('month');
   const [category, setCategory] = useState('all');
   const report = useReport(range, category);
+  const table = useSummaryTable(category === 'all');
 
   if (!report) return <p className='p-4'>Cargando...</p>;
 
@@ -35,6 +37,9 @@ export default function Dashboard() {
 
   const makeColors = (n) =>
     Array.from({ length: n }, (_, i) => `hsl(${(i * 60) % 360},70%,60%)`);
+
+  const monthName = (m) =>
+    new Date(2000, m - 1, 1).toLocaleString('es', { month: 'short' }).toUpperCase();
 
   let content;
   if (category === 'all') {
@@ -185,6 +190,66 @@ export default function Dashboard() {
         </select>
       </div>
       {content}
+      {category === 'all' && table && (
+        <div className='overflow-x-auto mt-8'>
+          <table className='min-w-max text-sm border-collapse whitespace-nowrap'>
+            <thead>
+              <tr>
+                <th className='border px-2 whitespace-nowrap'>Rubros</th>
+                <th className='border px-2 whitespace-nowrap' colSpan={3}>Antes</th>
+                {table.months.map((m) => (
+                  <th
+                    key={`${m.year}-${m.month}`}
+                    className='border px-2 whitespace-nowrap'
+                    colSpan='3'
+                  >
+                    {monthName(m.month)} {m.year}
+                  </th>
+                ))}
+                <th className='border px-2 whitespace-nowrap' colSpan='2'>Total por rubro</th>
+              </tr>
+              <tr>
+                <th></th>
+                <th className='border px-2 whitespace-nowrap'>Mes</th>
+                <th className='border px-2 whitespace-nowrap'>Real</th>
+                <th className='border px-2 whitespace-nowrap'>Dif</th>
+                {table.months.map((m) => (
+                  <React.Fragment key={`h-${m.year}-${m.month}`}>
+                    <th className='border px-2 whitespace-nowrap'>Mes</th>
+                    <th className='border px-2 whitespace-nowrap'>Real</th>
+                    <th className='border px-2 whitespace-nowrap'>Dif</th>
+                  </React.Fragment>
+                ))}
+                <th className='border px-2 whitespace-nowrap'>Mes</th>
+                <th className='border px-2 whitespace-nowrap'>Real</th>
+              </tr>
+            </thead>
+            <tbody>
+              {table.categories.map((cat) => (
+                <tr key={cat.id}>
+                  <td className='border px-2 text-left whitespace-nowrap'>{cat.name}</td>
+                  <td className='border px-2 whitespace-nowrap'>{cat.antesBudget.toFixed(2)}</td>
+                  <td className='border px-2 whitespace-nowrap'>{cat.antesReal.toFixed(2)}</td>
+                  <td className='border px-2 whitespace-nowrap'>
+                    {(cat.antesBudget - cat.antesReal).toFixed(2)}
+                  </td>
+                  {cat.months.map((m, idx) => (
+                    <React.Fragment key={idx}>
+                      <td className='border px-2 whitespace-nowrap'>{m.budget.toFixed(2)}</td>
+                      <td className='border px-2 whitespace-nowrap'>{m.real.toFixed(2)}</td>
+                      <td className='border px-2 whitespace-nowrap'>
+                        {(m.budget - m.real).toFixed(2)}
+                      </td>
+                    </React.Fragment>
+                  ))}
+                  <td className='border px-2 whitespace-nowrap'>{cat.totalBudget.toFixed(2)}</td>
+                  <td className='border px-2 whitespace-nowrap'>{cat.totalReal.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

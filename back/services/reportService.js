@@ -97,3 +97,72 @@ export async function getCategoryDetail(id, range = 'month') {
     expenses: { total, items: expenses },
   };
 }
+
+export async function getHistoricalTable() {
+  const start = new Date(2025, 5, 1); // Junio 2025
+  const end = new Date(2026, 5, 1); // Junio 2026 inclusive
+
+  const categories = await Categoria.findAll({ attributes: ['id', 'name'] });
+  const budgetsAll = await Presupuesto.findAll();
+  const expensesAll = await Gasto.findAll({
+    where: { date: { [Op.lte]: end } },
+    attributes: ['amount', 'category_id', 'date'],
+  });
+
+  // build months array
+  const months = [];
+  const mstart = new Date(start);
+  while (mstart <= end) {
+    months.push({ year: mstart.getFullYear(), month: mstart.getMonth() + 1 });
+    mstart.setMonth(mstart.getMonth() + 1);
+  }
+
+  function monthIndex(date) {
+    return (
+      date.getFullYear() * 12 + date.getMonth() -
+      (start.getFullYear() * 12 + start.getMonth())
+    );
+  }
+
+  const table = categories.map((cat) => {
+    const rows = months.map(() => ({ budget: 0, real: 0 }));
+    let antesBudget = 0;
+    let antesReal = 0;
+
+    const catBudgets = budgetsAll.filter((b) => b.category_id === cat.id);
+    for (const b of catBudgets) {
+      const recordStart = new Date(b.period_year, b.period_month - 1, 1);
+      const amount = parseFloat(b.amount);
+      let recEnd = b.recurring ? b.recurrence_end_date || end : recordStart;
+      recEnd = new Date(recEnd);
+      for (let d = new Date(recordStart); d <= recEnd; d.setMonth(d.getMonth() + 1)) {
+        if (d < start) {
+          antesBudget += amount;
+        } else if (d <= end) {
+          const idx = monthIndex(d);
+          if (idx >= 0 && idx < rows.length) rows[idx].budget += amount;
+        }
+        if (!b.recurring) break;
+      }
+    }
+
+    const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
+    for (const e of catExpenses) {
+      const d = new Date(e.date);
+      const amount = parseFloat(e.amount);
+      if (d < start) {
+        antesReal += amount;
+      } else {
+        const idx = monthIndex(new Date(d.getFullYear(), d.getMonth(), 1));
+        if (idx >= 0 && idx < rows.length) rows[idx].real += amount;
+      }
+    }
+
+    const totalBudget = antesBudget + rows.reduce((s, r) => s + r.budget, 0);
+    const totalReal = antesReal + rows.reduce((s, r) => s + r.real, 0);
+
+    return { id: cat.id, name: cat.name, antesBudget, antesReal, months: rows, totalBudget, totalReal };
+  });
+
+  return { start: { year: start.getFullYear(), month: start.getMonth() + 1 }, months, categories: table };
+}

@@ -87,3 +87,9 @@ export async function fetchReport(range = 'month', category = 'all') {
   if (!res.ok) throw new Error('Failed to fetch report');
   return res.json();
 }
+
+export async function fetchSummaryTable() {
+  const res = await fetch(`${REPORT_URL}/summary-table`);
+  if (!res.ok) throw new Error('Failed to fetch report table');
+  return res.json();
+}

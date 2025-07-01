@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { fetchReport } from '../services/api.js';
+import { fetchSummaryTable } from '../services/api.js';
 
-export default function useReport(range, category) {
+export default function useSummaryTable(enabled) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
-    setData(null); // reset while fetching new data
-    fetchReport(range, category)
+    fetchSummaryTable()
       .then((d) => {
         if (active) setData(d);
       })
@@ -15,7 +15,7 @@ export default function useReport(range, category) {
     return () => {
       active = false;
     };
-  }, [range, category]);
+  }, [enabled]);
 
   return data;
 }

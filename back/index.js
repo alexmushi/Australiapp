@@ -22,7 +22,7 @@ app.use('/api/gastos', gastoRoutes);
 
 async function start() {
   await testConnection();
-  await sequelize.sync({ alter: true });
+  await sequelize.sync();
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`🚀 Backend corriendo en puerto ${port}`));
 }

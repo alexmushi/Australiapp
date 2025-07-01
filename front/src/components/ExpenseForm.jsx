@@ -65,6 +65,20 @@ export default function ExpenseForm() {
     }
   };
 
+  // Helper to format date as dd/mm/yyyy
+  const formatDate = (isoDate) => {
+    if (!isoDate) return '';
+    const [year, month, day] = isoDate.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper to convert dd/mm/yyyy to yyyy-mm-dd
+  const parseDate = (displayDate) => {
+    if (!displayDate) return '';
+    const [day, month, year] = displayDate.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <form onSubmit={handleSubmit} noValidate>
       {error && <p className='text-red-500 mb-2'>{error}</p>}
@@ -103,9 +117,9 @@ export default function ExpenseForm() {
       <CustomInput
         name='date'
         id='date'
-        type='date'
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
+        value={formatDate(date)}
+        onChange={(e) => setDate(parseDate(e.target.value))}
+        placeholder='dd/mm/aaaa'
         required
       >
         Fecha
@@ -134,9 +148,9 @@ export default function ExpenseForm() {
           <CustomInput
             name='endDate'
             id='endDate'
-            type='date'
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            value={formatDate(endDate)}
+            onChange={(e) => setEndDate(parseDate(e.target.value))}
+            placeholder='dd/mm/aaaa'
           >
             Fecha fin
           </CustomInput>

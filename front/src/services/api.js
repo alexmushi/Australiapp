@@ -3,6 +3,7 @@ const REVIEWER_URL = '/api/reviewers';
 const CATEGORY_URL = '/api/categorias';
 const USER_URL = '/api/users';
 const DIVISA_URL = '/api/divisas';
+const GASTO_URL = '/api/gastos';
 
 export async function registerUser(data) {
   const res = await fetch(`${API_URL}/register`, {
@@ -44,6 +45,12 @@ export async function createCategory(data) {
   return res.json();
 }
 
+export async function fetchCategories() {
+  const res = await fetch(CATEGORY_URL);
+  if (!res.ok) throw new Error('Failed to fetch categories');
+  return res.json();
+}
+
 export async function updateUserCurrency(userId, code) {
   const res = await fetch(`${USER_URL}/${userId}/currency`, {
     method: 'PUT',
@@ -57,5 +64,15 @@ export async function updateUserCurrency(userId, code) {
 export async function fetchCurrencies() {
   const res = await fetch(DIVISA_URL);
   if (!res.ok) throw new Error('Failed to fetch currencies');
+  return res.json();
+}
+
+export async function createExpense(data) {
+  const res = await fetch(GASTO_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create expense');
   return res.json();
 }

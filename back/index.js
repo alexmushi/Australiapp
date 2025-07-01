@@ -7,6 +7,7 @@ import categoriaRoutes from './routes/categorias.routes.js';
 import usuarioRoutes from './routes/usuarios.routes.js';
 import divisaRoutes from './routes/divisas.routes.js';
 import gastoRoutes from './routes/gastos.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 import { startRecurringExpenseJob } from './cron/recurringExpenses.js';
 import { startDivisaUpdateJob } from './cron/updateDivisas.js';
 
@@ -21,6 +22,7 @@ app.use('/api/categorias', categoriaRoutes);
 app.use('/api/users', usuarioRoutes);
 app.use('/api/divisas', divisaRoutes);
 app.use('/api/gastos', gastoRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 async function start() {
   await testConnection();

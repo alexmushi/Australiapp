@@ -38,6 +38,7 @@ export default function Dashboard() {
 
   let content;
   if (category === 'all') {
+    if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
     const catLabels = report.categories.map((c) => c.name);
     const expenseData = report.categories.map((c) => c.expenses);
     const budgetData = report.categories.map((c) => c.budget);
@@ -99,6 +100,8 @@ export default function Dashboard() {
       </>
     );
   } else {
+    if (!report.expenses || !Array.isArray(report.expenses.items))
+      return <p className='p-4'>Cargando...</p>;
     const expenses = report.expenses.items;
     const left = Math.max(report.budget - report.expenses.total, 0);
     const pieData = {

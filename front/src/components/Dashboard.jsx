@@ -41,6 +41,54 @@ export default function Dashboard() {
   const monthName = (m) =>
     new Date(2000, m - 1, 1).toLocaleString('es', { month: 'short' }).toUpperCase();
 
+  const totals = table
+    ? (() => {
+        const antesBudget = table.categories.reduce(
+          (s, c) => s + c.antesBudget,
+          0
+        );
+        const antesReal = table.categories.reduce(
+          (s, c) => s + c.antesReal,
+          0
+        );
+        const monthTotals = table.months.map((_, idx) => {
+          const budget = table.categories.reduce(
+            (s, c) => s + c.months[idx].budget,
+            0
+          );
+          const real = table.categories.reduce(
+            (s, c) => s + c.months[idx].real,
+            0
+          );
+          return { budget, real };
+        });
+        const totalBudget = table.categories.reduce(
+          (s, c) => s + c.totalBudget,
+          0
+        );
+        const totalReal = table.categories.reduce(
+          (s, c) => s + c.totalReal,
+          0
+        );
+        return { antesBudget, antesReal, monthTotals, totalBudget, totalReal };
+      })()
+    : null;
+
+  const mensualDiffs = totals
+    ? [
+        totals.antesBudget - totals.antesReal,
+        ...totals.monthTotals.map((m) => m.budget - m.real),
+      ]
+    : [];
+  const acumulados = [];
+  if (mensualDiffs.length) {
+    mensualDiffs.reduce((acc, val, idx) => {
+      const sum = acc + val;
+      acumulados[idx] = sum;
+      return sum;
+    }, 0);
+  }
+
   let content;
   if (category === 'all') {
     if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
@@ -246,6 +294,56 @@ export default function Dashboard() {
                   <td className='border px-2 whitespace-nowrap'>{cat.totalReal.toFixed(2)}</td>
                 </tr>
               ))}
+              {totals && (
+                <tr className='font-semibold'>
+                  <td className='border px-2 whitespace-nowrap'>Mensual</td>
+                  <td className='border px-2 whitespace-nowrap'>
+                    {totals.antesBudget.toFixed(2)}
+                  </td>
+                  <td className='border px-2 whitespace-nowrap'>
+                    {totals.antesReal.toFixed(2)}
+                  </td>
+                  <td className='border px-2 whitespace-nowrap'>
+                    {mensualDiffs[0].toFixed(2)}
+                  </td>
+                  {totals.monthTotals.map((m, idx) => (
+                    <React.Fragment key={`m-${idx}`}>
+                      <td className='border px-2 whitespace-nowrap'>{m.budget.toFixed(2)}</td>
+                      <td className='border px-2 whitespace-nowrap'>{m.real.toFixed(2)}</td>
+                      <td className='border px-2 whitespace-nowrap'>
+                        {mensualDiffs[idx + 1].toFixed(2)}
+                      </td>
+                    </React.Fragment>
+                  ))}
+                  <td className='border px-2 whitespace-nowrap'>
+                    {totals.totalBudget.toFixed(2)}
+                  </td>
+                  <td className='border px-2 whitespace-nowrap'>
+                    {totals.totalReal.toFixed(2)}
+                  </td>
+                </tr>
+              )}
+              {totals && (
+                <tr className='font-semibold'>
+                  <td className='border px-2 whitespace-nowrap'>Acumulado</td>
+                  <td className='border px-2 whitespace-nowrap'></td>
+                  <td className='border px-2 whitespace-nowrap'></td>
+                  <td className='border px-2 whitespace-nowrap'>
+                    {acumulados[0].toFixed(2)}
+                  </td>
+                  {totals.monthTotals.map((_, idx) => (
+                    <React.Fragment key={`a-${idx}`}>
+                      <td className='border px-2 whitespace-nowrap'></td>
+                      <td className='border px-2 whitespace-nowrap'></td>
+                      <td className='border px-2 whitespace-nowrap'>
+                        {acumulados[idx + 1].toFixed(2)}
+                      </td>
+                    </React.Fragment>
+                  ))}
+                  <td className='border px-2 whitespace-nowrap'></td>
+                  <td className='border px-2 whitespace-nowrap'></td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

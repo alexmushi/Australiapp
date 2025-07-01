@@ -4,6 +4,7 @@ const CATEGORY_URL = '/api/categorias';
 const USER_URL = '/api/users';
 const DIVISA_URL = '/api/divisas';
 const EXPENSE_URL = '/api/gastos';
+const DASHBOARD_URL = '/api/dashboard';
 
 export async function registerUser(data) {
   const res = await fetch(`${API_URL}/register`, {
@@ -74,5 +75,11 @@ export async function createExpense(data) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to create expense');
+  return res.json();
+}
+
+export async function fetchDashboard(period = 'this_month') {
+  const res = await fetch(`${DASHBOARD_URL}?period=${period}`);
+  if (!res.ok) throw new Error('Failed to fetch dashboard');
   return res.json();
 }

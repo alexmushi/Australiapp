@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "echo \"No front-end tests defined\""
   },
   "dependencies": {
     "@material/web": "^1.5.1",

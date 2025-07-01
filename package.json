@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "test": "npm run test --prefix back && npm run test --prefix front"
+  },
   "dependencies": {
     "dotenv": "^16.5.0",
     "mysql2": "^3.14.1",

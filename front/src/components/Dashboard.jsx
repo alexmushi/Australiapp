@@ -251,7 +251,7 @@ export default function Dashboard() {
           <table className='min-w-max text-sm border-collapse whitespace-nowrap'>
             <thead>
               <tr>
-                <th className='border px-2 whitespace-nowrap'>Rubros</th>
+                <th className='border px-2 whitespace-nowrap sticky left-0 bg-background z-10'>Rubros</th>
                 <th className='border px-2 whitespace-nowrap' colSpan={3}>Antes</th>
                 {table.months.map((m) => (
                   <th
@@ -265,25 +265,25 @@ export default function Dashboard() {
                 <th className='border px-2 whitespace-nowrap' colSpan='2'>Total por rubro</th>
               </tr>
               <tr>
-                <th></th>
-                <th className='border px-2 whitespace-nowrap'>Mes</th>
+                <th className='sticky left-0 bg-background'></th>
+                <th className='border px-2 whitespace-nowrap'>Presupuesto</th>
                 <th className='border px-2 whitespace-nowrap'>Real</th>
                 <th className='border px-2 whitespace-nowrap'>Dif</th>
                 {table.months.map((m) => (
                   <React.Fragment key={`h-${m.year}-${m.month}`}>
-                    <th className='border px-2 whitespace-nowrap'>Mes</th>
+                    <th className='border px-2 whitespace-nowrap'>Presupuesto</th>
                     <th className='border px-2 whitespace-nowrap'>Real</th>
                     <th className='border px-2 whitespace-nowrap'>Dif</th>
                   </React.Fragment>
                 ))}
-                <th className='border px-2 whitespace-nowrap'>Mes</th>
+                <th className='border px-2 whitespace-nowrap'>Presupuesto</th>
                 <th className='border px-2 whitespace-nowrap'>Real</th>
               </tr>
             </thead>
             <tbody>
               {table.categories.map((cat) => (
                 <tr key={cat.id}>
-                  <td className='border px-2 text-left whitespace-nowrap'>{cat.name}</td>
+                  <td className='border px-2 text-left whitespace-nowrap sticky left-0 bg-background'>{cat.name}</td>
                   <td className='border px-2 whitespace-nowrap'>{cat.antesBudget.toFixed(2)}</td>
                   <td className='border px-2 whitespace-nowrap'>{cat.antesReal.toFixed(2)}</td>
                   <td className='border px-2 whitespace-nowrap'>
@@ -304,7 +304,7 @@ export default function Dashboard() {
               ))}
               {totals && (
                 <tr className='font-semibold'>
-                  <td className='border px-2 whitespace-nowrap'>Mensual</td>
+                  <td className='border px-2 whitespace-nowrap sticky left-0 bg-background'>Mensual</td>
                   <td className='border px-2 whitespace-nowrap'>
                     {totals.antesBudget.toFixed(2)}
                   </td>
@@ -333,7 +333,7 @@ export default function Dashboard() {
               )}
               {totals && (
                 <tr className='font-semibold'>
-                  <td className='border px-2 whitespace-nowrap'>Acumulado</td>
+                  <td className='border px-2 whitespace-nowrap sticky left-0 bg-background'>Acumulado</td>
                   <td className='border px-2 whitespace-nowrap'></td>
                   <td className='border px-2 whitespace-nowrap'></td>
                   <td className='border px-2 whitespace-nowrap'>

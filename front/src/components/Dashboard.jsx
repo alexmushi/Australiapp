@@ -259,7 +259,7 @@ export default function Dashboard() {
           >
             <thead>
               <tr>
-                <th className='border px-2 whitespace-nowrap sticky left-0 bg-background z-10'>Rubros</th>
+                <th className='border px-2 whitespace-nowrap sticky left-0 bg-background z-10 sticky-col'>Rubros</th>
                 <th className='border px-2 whitespace-nowrap' colSpan={3}>Antes</th>
                 {table.months.map((m) => (
                   <th
@@ -274,7 +274,7 @@ export default function Dashboard() {
               </tr>
               <tr>
                 <th
-                  className={`${cellClass(0)} sticky left-0 bg-background`}
+                  className={`${cellClass(0)} sticky left-0 bg-background sticky-col`}
                   onMouseEnter={() => setHoverCol(0)}
                 ></th>
                 <th
@@ -335,7 +335,7 @@ export default function Dashboard() {
               {table.categories.map((cat) => (
                 <tr key={cat.id}>
                   <td
-                    className={`${cellClass(0)} text-left sticky left-0 bg-background`}
+                    className={`${cellClass(0)} text-left sticky left-0 bg-background sticky-col`}
                     onMouseEnter={() => setHoverCol(0)}
                   >
                     {cat.name}
@@ -397,7 +397,7 @@ export default function Dashboard() {
               {totals && (
                 <tr className='font-semibold'>
                   <td
-                    className={`${cellClass(0)} sticky left-0 bg-background`}
+                    className={`${cellClass(0)} sticky left-0 bg-background sticky-col`}
                     onMouseEnter={() => setHoverCol(0)}
                   >
                     Mensual
@@ -459,7 +459,7 @@ export default function Dashboard() {
               {totals && (
                 <tr className='font-semibold'>
                   <td
-                    className={`${cellClass(0)} sticky left-0 bg-background`}
+                    className={`${cellClass(0)} sticky left-0 bg-background sticky-col`}
                     onMouseEnter={() => setHoverCol(0)}
                   >
                     Acumulado

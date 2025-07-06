@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [category, setCategory] = useState('all');
   const report = useReport(range, category);
   const table = useSummaryTable(category === 'all');
+  const [hoverCol, setHoverCol] = useState(null);
 
   if (!report) return <p className='p-4'>Cargando...</p>;
 
@@ -40,6 +41,9 @@ export default function Dashboard() {
 
   const monthName = (m) =>
     new Date(2000, m - 1, 1).toLocaleString('es', { month: 'short' }).toUpperCase();
+
+  const cellClass = (idx) =>
+    `border px-2 whitespace-nowrap ${hoverCol === idx ? 'col-hover' : ''}`;
 
   const totals = table
     ? (() => {
@@ -70,9 +74,10 @@ export default function Dashboard() {
           (s, c) => s + c.totalReal,
           0
         );
-        return { antesBudget, antesReal, monthTotals, totalBudget, totalReal };
-      })()
+      return { antesBudget, antesReal, monthTotals, totalBudget, totalReal };
+    })()
     : null;
+  const monthCount = table ? table.months.length : 0;
 
   const mensualDiffs = totals
     ? [
@@ -248,7 +253,10 @@ export default function Dashboard() {
       {content}
       {category === 'all' && table && (
         <div className='overflow-x-auto mt-8'>
-          <table className='min-w-max text-sm border-collapse whitespace-nowrap'>
+          <table
+            className='min-w-max text-sm border-collapse whitespace-nowrap crosshair-table'
+            onMouseLeave={() => setHoverCol(null)}
+          >
             <thead>
               <tr>
                 <th className='border px-2 whitespace-nowrap sticky left-0 bg-background z-10'>Rubros</th>
@@ -265,91 +273,237 @@ export default function Dashboard() {
                 <th className='border px-2 whitespace-nowrap' colSpan='2'>Total por rubro</th>
               </tr>
               <tr>
-                <th className='sticky left-0 bg-background'></th>
-                <th className='border px-2 whitespace-nowrap'>Presupuesto</th>
-                <th className='border px-2 whitespace-nowrap'>Real</th>
-                <th className='border px-2 whitespace-nowrap'>Dif</th>
-                {table.months.map((m) => (
+                <th
+                  className={`${cellClass(0)} sticky left-0 bg-background`}
+                  onMouseEnter={() => setHoverCol(0)}
+                ></th>
+                <th
+                  className={cellClass(1)}
+                  onMouseEnter={() => setHoverCol(1)}
+                >
+                  Presupuesto
+                </th>
+                <th
+                  className={cellClass(2)}
+                  onMouseEnter={() => setHoverCol(2)}
+                >
+                  Real
+                </th>
+                <th
+                  className={cellClass(3)}
+                  onMouseEnter={() => setHoverCol(3)}
+                >
+                  Dif
+                </th>
+                {table.months.map((m, mi) => (
                   <React.Fragment key={`h-${m.year}-${m.month}`}>
-                    <th className='border px-2 whitespace-nowrap'>Presupuesto</th>
-                    <th className='border px-2 whitespace-nowrap'>Real</th>
-                    <th className='border px-2 whitespace-nowrap'>Dif</th>
+                    <th
+                      className={cellClass(4 + mi * 3)}
+                      onMouseEnter={() => setHoverCol(4 + mi * 3)}
+                    >
+                      Presupuesto
+                    </th>
+                    <th
+                      className={cellClass(4 + mi * 3 + 1)}
+                      onMouseEnter={() => setHoverCol(4 + mi * 3 + 1)}
+                    >
+                      Real
+                    </th>
+                    <th
+                      className={cellClass(4 + mi * 3 + 2)}
+                      onMouseEnter={() => setHoverCol(4 + mi * 3 + 2)}
+                    >
+                      Dif
+                    </th>
                   </React.Fragment>
                 ))}
-                <th className='border px-2 whitespace-nowrap'>Presupuesto</th>
-                <th className='border px-2 whitespace-nowrap'>Real</th>
+                <th
+                  className={cellClass(4 + monthCount * 3)}
+                  onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
+                >
+                  Presupuesto
+                </th>
+                <th
+                  className={cellClass(5 + monthCount * 3)}
+                  onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
+                >
+                  Real
+                </th>
               </tr>
             </thead>
             <tbody>
               {table.categories.map((cat) => (
                 <tr key={cat.id}>
-                  <td className='border px-2 text-left whitespace-nowrap sticky left-0 bg-background'>{cat.name}</td>
-                  <td className='border px-2 whitespace-nowrap'>{cat.antesBudget.toFixed(2)}</td>
-                  <td className='border px-2 whitespace-nowrap'>{cat.antesReal.toFixed(2)}</td>
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={`${cellClass(0)} text-left sticky left-0 bg-background`}
+                    onMouseEnter={() => setHoverCol(0)}
+                  >
+                    {cat.name}
+                  </td>
+                  <td
+                    className={cellClass(1)}
+                    onMouseEnter={() => setHoverCol(1)}
+                  >
+                    {cat.antesBudget.toFixed(2)}
+                  </td>
+                  <td
+                    className={cellClass(2)}
+                    onMouseEnter={() => setHoverCol(2)}
+                  >
+                    {cat.antesReal.toFixed(2)}
+                  </td>
+                  <td
+                    className={cellClass(3)}
+                    onMouseEnter={() => setHoverCol(3)}
+                  >
                     {(cat.antesBudget - cat.antesReal).toFixed(2)}
                   </td>
                   {cat.months.map((m, idx) => (
                     <React.Fragment key={idx}>
-                      <td className='border px-2 whitespace-nowrap'>{m.budget.toFixed(2)}</td>
-                      <td className='border px-2 whitespace-nowrap'>{m.real.toFixed(2)}</td>
-                      <td className='border px-2 whitespace-nowrap'>
+                      <td
+                        className={cellClass(4 + idx * 3)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3)}
+                      >
+                        {m.budget.toFixed(2)}
+                      </td>
+                      <td
+                        className={cellClass(4 + idx * 3 + 1)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
+                      >
+                        {m.real.toFixed(2)}
+                      </td>
+                      <td
+                        className={cellClass(4 + idx * 3 + 2)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
+                      >
                         {(m.budget - m.real).toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
-                  <td className='border px-2 whitespace-nowrap'>{cat.totalBudget.toFixed(2)}</td>
-                  <td className='border px-2 whitespace-nowrap'>{cat.totalReal.toFixed(2)}</td>
+                  <td
+                    className={cellClass(4 + monthCount * 3)}
+                    onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
+                  >
+                    {cat.totalBudget.toFixed(2)}
+                  </td>
+                  <td
+                    className={cellClass(5 + monthCount * 3)}
+                    onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
+                  >
+                    {cat.totalReal.toFixed(2)}
+                  </td>
                 </tr>
               ))}
               {totals && (
                 <tr className='font-semibold'>
-                  <td className='border px-2 whitespace-nowrap sticky left-0 bg-background'>Mensual</td>
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={`${cellClass(0)} sticky left-0 bg-background`}
+                    onMouseEnter={() => setHoverCol(0)}
+                  >
+                    Mensual
+                  </td>
+                  <td
+                    className={cellClass(1)}
+                    onMouseEnter={() => setHoverCol(1)}
+                  >
                     {totals.antesBudget.toFixed(2)}
                   </td>
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={cellClass(2)}
+                    onMouseEnter={() => setHoverCol(2)}
+                  >
                     {totals.antesReal.toFixed(2)}
                   </td>
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={cellClass(3)}
+                    onMouseEnter={() => setHoverCol(3)}
+                  >
                     {mensualDiffs[0].toFixed(2)}
                   </td>
                   {totals.monthTotals.map((m, idx) => (
                     <React.Fragment key={`m-${idx}`}>
-                      <td className='border px-2 whitespace-nowrap'>{m.budget.toFixed(2)}</td>
-                      <td className='border px-2 whitespace-nowrap'>{m.real.toFixed(2)}</td>
-                      <td className='border px-2 whitespace-nowrap'>
+                      <td
+                        className={cellClass(4 + idx * 3)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3)}
+                      >
+                        {m.budget.toFixed(2)}
+                      </td>
+                      <td
+                        className={cellClass(4 + idx * 3 + 1)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
+                      >
+                        {m.real.toFixed(2)}
+                      </td>
+                      <td
+                        className={cellClass(4 + idx * 3 + 2)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
+                      >
                         {mensualDiffs[idx + 1].toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={cellClass(4 + monthCount * 3)}
+                    onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
+                  >
                     {totals.totalBudget.toFixed(2)}
                   </td>
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={cellClass(5 + monthCount * 3)}
+                    onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
+                  >
                     {totals.totalReal.toFixed(2)}
                   </td>
                 </tr>
               )}
               {totals && (
                 <tr className='font-semibold'>
-                  <td className='border px-2 whitespace-nowrap sticky left-0 bg-background'>Acumulado</td>
-                  <td className='border px-2 whitespace-nowrap'></td>
-                  <td className='border px-2 whitespace-nowrap'></td>
-                  <td className='border px-2 whitespace-nowrap'>
+                  <td
+                    className={`${cellClass(0)} sticky left-0 bg-background`}
+                    onMouseEnter={() => setHoverCol(0)}
+                  >
+                    Acumulado
+                  </td>
+                  <td
+                    className={cellClass(1)}
+                    onMouseEnter={() => setHoverCol(1)}
+                  ></td>
+                  <td
+                    className={cellClass(2)}
+                    onMouseEnter={() => setHoverCol(2)}
+                  ></td>
+                  <td
+                    className={cellClass(3)}
+                    onMouseEnter={() => setHoverCol(3)}
+                  >
                     {acumulados[0].toFixed(2)}
                   </td>
                   {totals.monthTotals.map((_, idx) => (
                     <React.Fragment key={`a-${idx}`}>
-                      <td className='border px-2 whitespace-nowrap'></td>
-                      <td className='border px-2 whitespace-nowrap'></td>
-                      <td className='border px-2 whitespace-nowrap'>
+                      <td
+                        className={cellClass(4 + idx * 3)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3)}
+                      ></td>
+                      <td
+                        className={cellClass(4 + idx * 3 + 1)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
+                      ></td>
+                      <td
+                        className={cellClass(4 + idx * 3 + 2)}
+                        onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
+                      >
                         {acumulados[idx + 1].toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
-                  <td className='border px-2 whitespace-nowrap'></td>
-                  <td className='border px-2 whitespace-nowrap'></td>
+                  <td
+                    className={cellClass(4 + monthCount * 3)}
+                    onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
+                  ></td>
+                  <td
+                    className={cellClass(5 + monthCount * 3)}
+                    onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
+                  ></td>
                 </tr>
               )}
             </tbody>

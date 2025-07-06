@@ -68,3 +68,11 @@ input[type="password"],
 textarea {
   color: var(--md-sys-color-on-surface);
 }
+
+.crosshair-table tbody tr:hover > * {
+  background-color: rgba(144, 202, 249, 0.2);
+}
+
+.crosshair-table .col-hover {
+  background-color: rgba(144, 202, 249, 0.2);
+}

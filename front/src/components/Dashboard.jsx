@@ -144,11 +144,15 @@ export default function Dashboard() {
       <>
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>General</h3>
-          <Pie data={pieData} options={pieOptions} />
+          <div className='mx-auto max-w-2xl'>
+            <Pie data={pieData} options={pieOptions} />
+          </div>
         </div>
         <div>
           <h3 className='text-lg mb-2'>Por categoría</h3>
-          <Bar data={barData} />
+          <div className='mx-auto max-w-2xl'>
+            <Bar data={barData} />
+          </div>
         </div>
       </>
     );
@@ -202,17 +206,21 @@ export default function Dashboard() {
       <>
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>{report.name}</h3>
-          <Bar data={barData} />
+          <div className='mx-auto max-w-2xl'>
+            <Bar data={barData} />
+          </div>
         </div>
         <div>
-          <Pie data={pieData} options={pieOptions} />
+          <div className='mx-auto max-w-2xl'>
+            <Pie data={pieData} options={pieOptions} />
+          </div>
         </div>
       </>
     );
   }
 
   return (
-    <div className='p-4'>
+    <div className='p-4 max-w-5xl mx-auto'>
       <div className='flex gap-4 mb-4'>
         <select
           value={category}

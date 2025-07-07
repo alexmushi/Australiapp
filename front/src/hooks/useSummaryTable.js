@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { fetchSummaryTable } from '../services/api.js';
 
-export default function useSummaryTable(enabled) {
+export default function useSummaryTable(enabled, currency) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    fetchSummaryTable()
+    fetchSummaryTable(currency)
       .then((d) => {
         if (active) setData(d);
       })
@@ -15,7 +15,7 @@ export default function useSummaryTable(enabled) {
     return () => {
       active = false;
     };
-  }, [enabled]);
+  }, [enabled, currency]);
 
   return data;
 }

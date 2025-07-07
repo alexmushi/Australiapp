@@ -2,6 +2,7 @@ import { Categoria } from '../models/categoria.model.js';
 import { Presupuesto } from '../models/presupuesto.model.js';
 import { Gasto } from '../models/gasto.model.js';
 import { Op } from 'sequelize';
+import { getDivisaRates } from './divisaService.js';
 
 function monthsBetween(start, end) {
   return (
@@ -10,7 +11,14 @@ function monthsBetween(start, end) {
   ) + 1;
 }
 
-export async function getSummary(range = 'month') {
+function convert(amount, from, to, rates) {
+  const val = parseFloat(amount);
+  if (from === to) return val;
+  const toMXN = from === 'MXN' ? val : val / rates[from];
+  return to === 'MXN' ? toMXN : toMXN * rates[to];
+}
+
+export async function getSummary(range = 'month', currency = 'MXN') {
   const now = new Date();
   let start;
   let end = new Date();
@@ -32,9 +40,11 @@ export async function getSummary(range = 'month') {
   const categories = await Categoria.findAll({ attributes: ['id', 'name'] });
   const expensesAll = await Gasto.findAll({
     where: { date: { [Op.between]: [start, end] } },
-    attributes: ['id', 'amount', 'category_id', 'date', 'description'],
+    attributes: ['id', 'amount', 'currency_code', 'category_id', 'date', 'description'],
     order: [['date', 'ASC']],
   });
+
+  const rates = await getDivisaRates();
 
   const result = [];
   let totalBudget = 0;
@@ -51,18 +61,18 @@ export async function getSummary(range = 'month') {
           const effectiveStart = start > recordStart ? start : recordStart;
           const effectiveEnd = end < recEnd ? end : recEnd;
           const months = monthsBetween(effectiveStart, effectiveEnd);
-          budget += months * parseFloat(b.amount);
+          budget += months * convert(b.amount, b.currency_code, currency, rates);
         }
       } else {
         if (recordStart >= start && recordStart <= end) {
-          budget += parseFloat(b.amount);
+          budget += convert(b.amount, b.currency_code, currency, rates);
         }
       }
     }
 
     const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
     const spent = catExpenses.reduce(
-      (sum, e) => sum + parseFloat(e.amount),
+      (sum, e) => sum + convert(e.amount, e.currency_code, currency, rates),
       0
     );
     totalBudget += budget;
@@ -77,15 +87,15 @@ export async function getSummary(range = 'month') {
     expenses: expensesAll.map((e) => ({
       id: e.id,
       category_id: e.category_id,
-      amount: parseFloat(e.amount),
+      amount: convert(e.amount, e.currency_code, currency, rates),
       date: e.date,
       description: e.description,
     })),
   };
 }
 
-export async function getCategoryDetail(id, range = 'month') {
-  const summary = await getSummary(range);
+export async function getCategoryDetail(id, range = 'month', currency = 'MXN') {
+  const summary = await getSummary(range, currency);
   const cat = summary.categories.find((c) => c.id === Number(id));
   if (!cat) throw new Error('Categoria no encontrada');
   const expenses = summary.expenses.filter((e) => e.category_id === Number(id));
@@ -98,7 +108,7 @@ export async function getCategoryDetail(id, range = 'month') {
   };
 }
 
-export async function getHistoricalTable() {
+export async function getHistoricalTable(currency = 'MXN') {
   const start = new Date(2025, 5, 1); // Junio 2025
   const end = new Date(2026, 5, 1); // Junio 2026 inclusive
 
@@ -106,8 +116,10 @@ export async function getHistoricalTable() {
   const budgetsAll = await Presupuesto.findAll();
   const expensesAll = await Gasto.findAll({
     where: { date: { [Op.lte]: end } },
-    attributes: ['amount', 'category_id', 'date'],
+    attributes: ['amount', 'currency_code', 'category_id', 'date'],
   });
+
+  const rates = await getDivisaRates();
 
   // build months array
   const months = [];
@@ -132,7 +144,7 @@ export async function getHistoricalTable() {
     const catBudgets = budgetsAll.filter((b) => b.category_id === cat.id);
     for (const b of catBudgets) {
       const recordStart = new Date(b.period_year, b.period_month - 1, 1);
-      const amount = parseFloat(b.amount);
+      const amount = convert(b.amount, b.currency_code, currency, rates);
       let recEnd = b.recurring ? b.recurrence_end_date || end : recordStart;
       recEnd = new Date(recEnd);
       for (let d = new Date(recordStart); d <= recEnd; d.setMonth(d.getMonth() + 1)) {
@@ -149,7 +161,7 @@ export async function getHistoricalTable() {
     const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
     for (const e of catExpenses) {
       const d = new Date(e.date);
-      const amount = parseFloat(e.amount);
+      const amount = convert(e.amount, e.currency_code, currency, rates);
       if (d < start) {
         antesReal += amount;
       } else {

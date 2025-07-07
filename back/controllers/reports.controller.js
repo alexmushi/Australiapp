@@ -5,9 +5,9 @@ import {
 } from '../services/reportService.js';
 
 export async function summaryController(req, res) {
-  const { range = 'month' } = req.query;
+  const { range = 'month', currency = 'MXN' } = req.query;
   try {
-    const data = await getSummary(range);
+    const data = await getSummary(range, currency);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -15,10 +15,10 @@ export async function summaryController(req, res) {
 }
 
 export async function categoryController(req, res) {
-  const { range = 'month' } = req.query;
+  const { range = 'month', currency = 'MXN' } = req.query;
   const { id } = req.params;
   try {
-    const data = await getCategoryDetail(id, range);
+    const data = await getCategoryDetail(id, range, currency);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -26,8 +26,9 @@ export async function categoryController(req, res) {
 }
 
 export async function summaryTableController(req, res) {
+  const { currency = 'MXN' } = req.query;
   try {
-    const data = await getHistoricalTable();
+    const data = await getHistoricalTable(currency);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });

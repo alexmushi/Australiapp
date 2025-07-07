@@ -12,6 +12,9 @@ import {
 import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
 import useSummaryTable from '../hooks/useSummaryTable.js';
+import useCurrencyRates from '../hooks/useCurrencyRates.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { makeRateMap, convert } from '../utils/currency.js';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -27,6 +30,11 @@ export default function Dashboard() {
   const [category, setCategory] = useState('all');
   const report = useReport(range, category);
   const table = useSummaryTable(category === 'all');
+  const rates = useCurrencyRates();
+  const { user } = useAuth();
+  const rateMap = rates ? makeRateMap(rates) : null;
+  const targetCur = user?.default_currency_code || 'MXN';
+  const conv = (amount) => convert(amount, 'MXN', targetCur, rateMap);
   const [hoverCol, setHoverCol] = useState(null);
 
   if (!report) return <p className='p-4'>Cargando...</p>;
@@ -81,8 +89,8 @@ export default function Dashboard() {
 
   const mensualDiffs = totals
     ? [
-        totals.antesBudget - totals.antesReal,
-        ...totals.monthTotals.map((m) => m.budget - m.real),
+        conv(totals.antesBudget) - conv(totals.antesReal),
+        ...totals.monthTotals.map((m) => conv(m.budget) - conv(m.real)),
       ]
     : [];
   const acumulados = [];
@@ -98,8 +106,8 @@ export default function Dashboard() {
   if (category === 'all') {
     if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
     const catLabels = report.categories.map((c) => c.name);
-    const expenseData = report.categories.map((c) => c.expenses);
-    const budgetData = report.categories.map((c) => c.budget);
+    const expenseData = report.categories.map((c) => conv(c.expenses));
+    const budgetData = report.categories.map((c) => conv(c.budget));
 
     const barData = {
       labels: catLabels,
@@ -119,11 +127,16 @@ export default function Dashboard() {
 
     const expenses = report.expenses;
     const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
+    const convExpenses = expenses.map((e) => ({
+      ...e,
+      amount: conv(e.amount),
+    }));
+    const totalLeftConv = conv(totalLeft);
     const pieData = {
       labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
       datasets: [
         {
-          data: expenses.map((e) => e.amount).concat([totalLeft]),
+          data: convExpenses.map((e) => e.amount).concat([totalLeftConv]),
           backgroundColor: makeColors(expenses.length + 1),
         },
       ],
@@ -135,8 +148,8 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${totalLeft.toFixed(2)}`;
-              const e = expenses[ctx.dataIndex];
+                return `Restante: $${totalLeftConv.toFixed(2)}`;
+              const e = convExpenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
               return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
             },
@@ -166,11 +179,15 @@ export default function Dashboard() {
       return <p className='p-4'>Cargando...</p>;
     const expenses = report.expenses.items;
     const left = Math.max(report.budget - report.expenses.total, 0);
+    const convExpenses = expenses.map((e) => ({ ...e, amount: conv(e.amount) }));
+    const leftConv = conv(left);
+    const totalConv = conv(report.expenses.total);
+    const budgetConv = conv(report.budget);
     const pieData = {
       labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
       datasets: [
         {
-          data: expenses.map((e) => e.amount).concat([left]),
+          data: convExpenses.map((e) => e.amount).concat([leftConv]),
           backgroundColor: makeColors(expenses.length + 1),
         },
       ],
@@ -181,8 +198,8 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${left.toFixed(2)}`;
-              const e = expenses[ctx.dataIndex];
+                return `Restante: $${leftConv.toFixed(2)}`;
+              const e = convExpenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
               return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
             },
@@ -197,12 +214,12 @@ export default function Dashboard() {
         {
           label: 'Gastos',
           backgroundColor: 'rgba(255,99,132,0.5)',
-          data: [report.expenses.total],
+          data: [totalConv],
         },
         {
           label: 'Presupuesto',
           backgroundColor: 'rgba(54,162,235,0.5)',
-          data: [report.budget],
+          data: [budgetConv],
         },
       ],
     };
@@ -344,19 +361,19 @@ export default function Dashboard() {
                     className={cellClass(1)}
                     onMouseEnter={() => setHoverCol(1)}
                   >
-                    {cat.antesBudget.toFixed(2)}
+                    {conv(cat.antesBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(2)}
                     onMouseEnter={() => setHoverCol(2)}
                   >
-                    {cat.antesReal.toFixed(2)}
+                    {conv(cat.antesReal).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {(cat.antesBudget - cat.antesReal).toFixed(2)}
+                    {(conv(cat.antesBudget) - conv(cat.antesReal)).toFixed(2)}
                   </td>
                   {cat.months.map((m, idx) => (
                     <React.Fragment key={idx}>
@@ -364,19 +381,19 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3)}
                       >
-                        {m.budget.toFixed(2)}
+                        {conv(m.budget).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 1)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
                       >
-                        {m.real.toFixed(2)}
+                        {conv(m.real).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {(m.budget - m.real).toFixed(2)}
+                        {(conv(m.budget) - conv(m.real)).toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
@@ -384,13 +401,13 @@ export default function Dashboard() {
                     className={cellClass(4 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
                   >
-                    {cat.totalBudget.toFixed(2)}
+                    {conv(cat.totalBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(5 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
                   >
-                    {cat.totalReal.toFixed(2)}
+                    {conv(cat.totalReal).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -406,19 +423,19 @@ export default function Dashboard() {
                     className={cellClass(1)}
                     onMouseEnter={() => setHoverCol(1)}
                   >
-                    {totals.antesBudget.toFixed(2)}
+                    {conv(totals.antesBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(2)}
                     onMouseEnter={() => setHoverCol(2)}
                   >
-                    {totals.antesReal.toFixed(2)}
+                    {conv(totals.antesReal).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {mensualDiffs[0].toFixed(2)}
+                    {(conv(totals.antesBudget) - conv(totals.antesReal)).toFixed(2)}
                   </td>
                   {totals.monthTotals.map((m, idx) => (
                     <React.Fragment key={`m-${idx}`}>
@@ -426,19 +443,19 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3)}
                       >
-                        {m.budget.toFixed(2)}
+                        {conv(m.budget).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 1)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
                       >
-                        {m.real.toFixed(2)}
+                        {conv(m.real).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {mensualDiffs[idx + 1].toFixed(2)}
+                        {(conv(m.budget) - conv(m.real)).toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
@@ -446,13 +463,13 @@ export default function Dashboard() {
                     className={cellClass(4 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
                   >
-                    {totals.totalBudget.toFixed(2)}
+                    {conv(totals.totalBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(5 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
                   >
-                    {totals.totalReal.toFixed(2)}
+                    {conv(totals.totalReal).toFixed(2)}
                   </td>
                 </tr>
               )}

@@ -68,6 +68,12 @@ export async function fetchCurrencies() {
   return res.json();
 }
 
+export async function fetchCurrencyRates() {
+  const res = await fetch(`${DIVISA_URL}/rates`);
+  if (!res.ok) throw new Error('Failed to fetch currency rates');
+  return res.json();
+}
+
 export async function createExpense(data) {
   const res = await fetch(EXPENSE_URL, {
     method: 'POST',

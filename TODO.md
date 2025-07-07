@@ -4,3 +4,4 @@
 - [ ] Módulo de notificaciones
 - [ ] Módulo de revisor: agregar sección donde se agregue un rol (si puede o no registrar gastos, agregar categorías)
 - [ ] Despliegue
+- [ ] Usar modales de confirmación/error

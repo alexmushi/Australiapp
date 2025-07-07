@@ -12,6 +12,8 @@ import {
 import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
 import useSummaryTable from '../hooks/useSummaryTable.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import useCurrencyRates from '../hooks/useCurrencyRates.js';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -23,13 +25,16 @@ const ranges = [
 
 export default function Dashboard() {
   const categories = useCategories();
+  const { user } = useAuth();
+  const rates = useCurrencyRates();
   const [range, setRange] = useState('month');
   const [category, setCategory] = useState('all');
   const report = useReport(range, category);
   const table = useSummaryTable(category === 'all');
   const [hoverCol, setHoverCol] = useState(null);
 
-  if (!report) return <p className='p-4'>Cargando...</p>;
+  if (!report || !user || rates.length === 0)
+    return <p className='p-4'>Cargando...</p>;
 
   const categoryOptions = [
     { value: 'all', label: 'Todas' },
@@ -44,6 +49,10 @@ export default function Dashboard() {
 
   const cellClass = (idx) =>
     `border px-2 whitespace-nowrap ${hoverCol === idx ? 'col-hover' : ''}`;
+
+  const rateMap = rates.reduce((acc, r) => ({ ...acc, [r.code]: r.value }), {});
+  const targetRate = rateMap[user.default_currency_code] ?? 1;
+  const convert = (amount) => amount * targetRate;
 
   const totals = table
     ? (() => {
@@ -98,8 +107,8 @@ export default function Dashboard() {
   if (category === 'all') {
     if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
     const catLabels = report.categories.map((c) => c.name);
-    const expenseData = report.categories.map((c) => c.expenses);
-    const budgetData = report.categories.map((c) => c.budget);
+    const expenseData = report.categories.map((c) => convert(c.expenses));
+    const budgetData = report.categories.map((c) => convert(c.budget));
 
     const barData = {
       labels: catLabels,
@@ -117,8 +126,14 @@ export default function Dashboard() {
       ],
     };
 
-    const expenses = report.expenses;
-    const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
+    const expenses = report.expenses.map((e) => ({
+      ...e,
+      amount: convert(e.amount),
+    }));
+    const totalLeft = Math.max(
+      convert(report.totalBudget - report.totalExpenses),
+      0
+    );
     const pieData = {
       labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
       datasets: [
@@ -135,10 +150,10 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${totalLeft.toFixed(2)}`;
+                return `Restante: ${totalLeft.toFixed(2)} ${user.default_currency_code}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              return `${date}: ${e.amount.toFixed(2)} ${user.default_currency_code}${e.description ? ' - ' + e.description : ''}`;
             },
           },
         },
@@ -164,8 +179,11 @@ export default function Dashboard() {
   } else {
     if (!report.expenses || !Array.isArray(report.expenses.items))
       return <p className='p-4'>Cargando...</p>;
-    const expenses = report.expenses.items;
-    const left = Math.max(report.budget - report.expenses.total, 0);
+    const expenses = report.expenses.items.map((e) => ({
+      ...e,
+      amount: convert(e.amount),
+    }));
+    const left = Math.max(convert(report.budget - report.expenses.total), 0);
     const pieData = {
       labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
       datasets: [
@@ -181,10 +199,10 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${left.toFixed(2)}`;
+                return `Restante: ${left.toFixed(2)} ${user.default_currency_code}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              return `${date}: ${e.amount.toFixed(2)} ${user.default_currency_code}${e.description ? ' - ' + e.description : ''}`;
             },
           },
         },
@@ -197,12 +215,12 @@ export default function Dashboard() {
         {
           label: 'Gastos',
           backgroundColor: 'rgba(255,99,132,0.5)',
-          data: [report.expenses.total],
+          data: [convert(report.expenses.total)],
         },
         {
           label: 'Presupuesto',
           backgroundColor: 'rgba(54,162,235,0.5)',
-          data: [report.budget],
+          data: [convert(report.budget)],
         },
       ],
     };
@@ -344,19 +362,19 @@ export default function Dashboard() {
                     className={cellClass(1)}
                     onMouseEnter={() => setHoverCol(1)}
                   >
-                    {cat.antesBudget.toFixed(2)}
+                    {convert(cat.antesBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(2)}
                     onMouseEnter={() => setHoverCol(2)}
                   >
-                    {cat.antesReal.toFixed(2)}
+                    {convert(cat.antesReal).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {(cat.antesBudget - cat.antesReal).toFixed(2)}
+                    {convert(cat.antesBudget - cat.antesReal).toFixed(2)}
                   </td>
                   {cat.months.map((m, idx) => (
                     <React.Fragment key={idx}>
@@ -364,19 +382,19 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3)}
                       >
-                        {m.budget.toFixed(2)}
+                        {convert(m.budget).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 1)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
                       >
-                        {m.real.toFixed(2)}
+                        {convert(m.real).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {(m.budget - m.real).toFixed(2)}
+                        {convert(m.budget - m.real).toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
@@ -384,13 +402,13 @@ export default function Dashboard() {
                     className={cellClass(4 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
                   >
-                    {cat.totalBudget.toFixed(2)}
+                    {convert(cat.totalBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(5 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
                   >
-                    {cat.totalReal.toFixed(2)}
+                    {convert(cat.totalReal).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -406,19 +424,19 @@ export default function Dashboard() {
                     className={cellClass(1)}
                     onMouseEnter={() => setHoverCol(1)}
                   >
-                    {totals.antesBudget.toFixed(2)}
+                    {convert(totals.antesBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(2)}
                     onMouseEnter={() => setHoverCol(2)}
                   >
-                    {totals.antesReal.toFixed(2)}
+                    {convert(totals.antesReal).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {mensualDiffs[0].toFixed(2)}
+                    {convert(mensualDiffs[0]).toFixed(2)}
                   </td>
                   {totals.monthTotals.map((m, idx) => (
                     <React.Fragment key={`m-${idx}`}>
@@ -426,19 +444,19 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3)}
                       >
-                        {m.budget.toFixed(2)}
+                        {convert(m.budget).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 1)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
                       >
-                        {m.real.toFixed(2)}
+                        {convert(m.real).toFixed(2)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {mensualDiffs[idx + 1].toFixed(2)}
+                        {convert(mensualDiffs[idx + 1]).toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}
@@ -446,13 +464,13 @@ export default function Dashboard() {
                     className={cellClass(4 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
                   >
-                    {totals.totalBudget.toFixed(2)}
+                    {convert(totals.totalBudget).toFixed(2)}
                   </td>
                   <td
                     className={cellClass(5 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
                   >
-                    {totals.totalReal.toFixed(2)}
+                    {convert(totals.totalReal).toFixed(2)}
                   </td>
                 </tr>
               )}
@@ -476,7 +494,7 @@ export default function Dashboard() {
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {acumulados[0].toFixed(2)}
+                    {convert(acumulados[0]).toFixed(2)}
                   </td>
                   {totals.monthTotals.map((_, idx) => (
                     <React.Fragment key={`a-${idx}`}>
@@ -492,7 +510,7 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {acumulados[idx + 1].toFixed(2)}
+                        {convert(acumulados[idx + 1]).toFixed(2)}
                       </td>
                     </React.Fragment>
                   ))}

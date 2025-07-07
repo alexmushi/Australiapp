@@ -12,6 +12,7 @@ import {
 import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
 import useSummaryTable from '../hooks/useSummaryTable.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -22,11 +23,13 @@ const ranges = [
 ];
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const categories = useCategories();
   const [range, setRange] = useState('month');
   const [category, setCategory] = useState('all');
-  const report = useReport(range, category);
-  const table = useSummaryTable(category === 'all');
+  const currency = user?.default_currency_code || 'MXN';
+  const report = useReport(range, category, currency);
+  const table = useSummaryTable(category === 'all', currency);
   const [hoverCol, setHoverCol] = useState(null);
 
   if (!report) return <p className='p-4'>Cargando...</p>;

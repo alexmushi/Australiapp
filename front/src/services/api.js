@@ -68,6 +68,12 @@ export async function fetchCurrencies() {
   return res.json();
 }
 
+export async function fetchCurrencyData() {
+  const res = await fetch(`${DIVISA_URL}/all`);
+  if (!res.ok) throw new Error('Failed to fetch currency data');
+  return res.json();
+}
+
 export async function createExpense(data) {
   const res = await fetch(EXPENSE_URL, {
     method: 'POST',
@@ -78,18 +84,18 @@ export async function createExpense(data) {
   return res.json();
 }
 
-export async function fetchReport(range = 'month', category = 'all') {
+export async function fetchReport(range = 'month', category = 'all', currency = 'MXN') {
   const url =
     category === 'all'
-      ? `${REPORT_URL}/summary?range=${range}`
-      : `${REPORT_URL}/category/${category}?range=${range}`;
+      ? `${REPORT_URL}/summary?range=${range}&currency=${currency}`
+      : `${REPORT_URL}/category/${category}?range=${range}&currency=${currency}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch report');
   return res.json();
 }
 
-export async function fetchSummaryTable() {
-  const res = await fetch(`${REPORT_URL}/summary-table`);
+export async function fetchSummaryTable(currency = 'MXN') {
+  const res = await fetch(`${REPORT_URL}/summary-table?currency=${currency}`);
   if (!res.ok) throw new Error('Failed to fetch report table');
   return res.json();
 }

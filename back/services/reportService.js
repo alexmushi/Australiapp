@@ -24,10 +24,15 @@ export async function getSummary(range = 'month', currency = 'MXN') {
   let end = new Date();
 
   switch (range) {
-    case 'week':
+    case 'week': {
       start = new Date(now);
-      start.setDate(start.getDate() - 7);
+      const day = start.getDay();
+      const diffToMonday = (day + 6) % 7;
+      start.setDate(start.getDate() - diffToMonday);
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
       break;
+    }
     case 'year':
       start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
       break;
@@ -50,25 +55,57 @@ export async function getSummary(range = 'month', currency = 'MXN') {
   let totalBudget = 0;
   let totalExpenses = 0;
 
+  const DAY = 24 * 60 * 60 * 1000;
+
+
   for (const cat of categories) {
     const budgets = await Presupuesto.findAll({ where: { category_id: cat.id } });
     let budget = 0;
     for (const b of budgets) {
       const recordStart = new Date(b.period_year, b.period_month - 1, 1);
+      const amountConv = convert(b.amount, b.currency_code, currency, rates);
       if (b.recurring) {
-        const recEnd = b.recurrence_end_date || end;
+        const recEnd = b.recurrence_end_date ? new Date(b.recurrence_end_date) : end;
         if (recEnd >= start && end >= recordStart) {
           const effectiveStart = start > recordStart ? start : recordStart;
           const effectiveEnd = end < recEnd ? end : recEnd;
-          const months = monthsBetween(effectiveStart, effectiveEnd);
-          budget += months * convert(b.amount, b.currency_code, currency, rates);
+          if (range === 'week') {
+            let m = new Date(effectiveStart.getFullYear(), effectiveStart.getMonth(), 1);
+            while (m <= effectiveEnd) {
+              const monthStart = new Date(m.getFullYear(), m.getMonth(), 1);
+              const monthEnd = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+              const os = effectiveStart > monthStart ? effectiveStart : monthStart;
+              const oe = effectiveEnd < monthEnd ? effectiveEnd : monthEnd;
+              if (os <= oe) {
+                const daysInMonth = monthEnd.getDate();
+                const overlapDays = Math.floor((oe - os) / DAY) + 1;
+                budget += (overlapDays / daysInMonth) * amountConv;
+              }
+              m.setMonth(m.getMonth() + 1);
+            }
+          } else {
+            const months = monthsBetween(effectiveStart, effectiveEnd);
+            budget += months * amountConv;
+          }
         }
       } else {
-        if (recordStart >= start && recordStart <= end) {
-          budget += convert(b.amount, b.currency_code, currency, rates);
+        const recordEnd = new Date(b.period_year, b.period_month, 0);
+        if (recordEnd >= start && recordStart <= end) {
+          const effectiveStart = start > recordStart ? start : recordStart;
+          const effectiveEnd = end < recordEnd ? end : recordEnd;
+          if (range === 'week') {
+            const daysInMonth = recordEnd.getDate();
+            const overlapDays = Math.floor((effectiveEnd - effectiveStart) / DAY) + 1;
+            if (overlapDays > 0) {
+              budget += (overlapDays / daysInMonth) * amountConv;
+            }
+          } else if (effectiveStart <= effectiveEnd) {
+            budget += amountConv;
+          }
         }
       }
     }
+
 
     const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
     const spent = catExpenses.reduce(

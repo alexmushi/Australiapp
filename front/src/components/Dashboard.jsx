@@ -18,7 +18,7 @@ ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Le
 
 const ranges = [
   { value: 'month', label: 'Este mes' },
-  { value: 'week', label: 'Última semana' },
+  { value: 'week', label: 'Esta semana' },
   { value: 'year', label: 'Último año' },
 ];
 

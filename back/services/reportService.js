@@ -33,6 +33,10 @@ export async function getSummary(range = 'month', currency = 'MXN') {
       end.setDate(start.getDate() + 6);
       break;
     }
+    case 'all':
+      start = new Date(0);
+      end = new Date(8640000000000000);
+      break;
     case 'year':
       start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
       break;
@@ -56,7 +60,6 @@ export async function getSummary(range = 'month', currency = 'MXN') {
   let totalExpenses = 0;
 
   const DAY = 24 * 60 * 60 * 1000;
-
 
   for (const cat of categories) {
     const budgets = await Presupuesto.findAll({ where: { category_id: cat.id } });
@@ -105,7 +108,6 @@ export async function getSummary(range = 'month', currency = 'MXN') {
         }
       }
     }
-
 
     const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
     const spent = catExpenses.reduce(

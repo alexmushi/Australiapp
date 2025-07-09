@@ -33,12 +33,16 @@ export default function Dashboard() {
   const table = useSummaryTable(category === 'all', currency);
   const [hoverCol, setHoverCol] = useState(null);
 
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat('es', { style: 'currency', currency }).format(val);
+
   if (!report) return <p className='p-4'>Cargando...</p>;
 
   const categoryOptions = [
     { value: 'all', label: 'Todas' },
     ...categories.map((c) => ({ value: String(c.id), label: c.name })),
   ];
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 
   const makeColors = (n) =>
     Array.from({ length: n }, (_, i) => `hsl(${(i * 60) % 360},70%,60%)`);
@@ -120,11 +124,29 @@ export default function Dashboard() {
         },
       ],
     };
+    const barOptions = {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y ?? ctx.parsed)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (v) => formatCurrency(v),
+          },
+        },
+      },
+    };
 
     const expenses = report.expenses;
     const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
     const pieData = {
-      labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
+      labels: expenses
+        .map((e, i) => `${categoryMap[e.category_id] || 'Gasto'} ${i + 1}`)
+        .concat(['Restante']),
       datasets: [
         {
           data: expenses.map((e) => e.amount).concat([totalLeft]),
@@ -139,10 +161,13 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${totalLeft.toFixed(2)}`;
+                return `Restante: ${formatCurrency(totalLeft)}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              const name = categoryMap[e.category_id] || 'Gasto';
+              return `${name} - ${date}: ${formatCurrency(e.amount)}${
+                e.description ? ' - ' + e.description : ''
+              }`;
             },
           },
         },
@@ -160,7 +185,7 @@ export default function Dashboard() {
         <div>
           <h3 className='text-lg mb-2'>Por categoría</h3>
           <div className='mx-auto max-w-2xl'>
-            <Bar data={barData} />
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
       </>
@@ -171,7 +196,9 @@ export default function Dashboard() {
     const expenses = report.expenses.items;
     const left = Math.max(report.budget - report.expenses.total, 0);
     const pieData = {
-      labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
+      labels: expenses
+        .map((e, i) => `${categoryMap[e.category_id] || 'Gasto'} ${i + 1}`)
+        .concat(['Restante']),
       datasets: [
         {
           data: expenses.map((e) => e.amount).concat([left]),
@@ -185,10 +212,13 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${left.toFixed(2)}`;
+                return `Restante: ${formatCurrency(left)}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              const name = categoryMap[e.category_id] || 'Gasto';
+              return `${name} - ${date}: ${formatCurrency(e.amount)}${
+                e.description ? ' - ' + e.description : ''
+              }`;
             },
           },
         },
@@ -210,13 +240,29 @@ export default function Dashboard() {
         },
       ],
     };
+    const barOptions = {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y ?? ctx.parsed)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (v) => formatCurrency(v),
+          },
+        },
+      },
+    };
 
     content = (
       <>
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>{report.name}</h3>
           <div className='mx-auto max-w-2xl'>
-            <Bar data={barData} />
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
         <div>

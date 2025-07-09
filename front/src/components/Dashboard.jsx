@@ -13,6 +13,7 @@ import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
 import useSummaryTable from '../hooks/useSummaryTable.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { formatCurrency } from '../utils/format.js';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -121,6 +122,16 @@ export default function Dashboard() {
       ],
     };
 
+    const barOptions = {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y, currency)}`,
+          },
+        },
+      },
+    };
+
     const expenses = report.expenses;
     const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
     const pieData = {
@@ -139,10 +150,10 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${totalLeft.toFixed(2)}`;
+                return `Restante: ${formatCurrency(totalLeft, currency)}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              return `${date}: ${formatCurrency(e.amount, currency)}${e.description ? ' - ' + e.description : ''}`;
             },
           },
         },
@@ -160,7 +171,7 @@ export default function Dashboard() {
         <div>
           <h3 className='text-lg mb-2'>Por categoría</h3>
           <div className='mx-auto max-w-2xl'>
-            <Bar data={barData} />
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
       </>
@@ -185,10 +196,10 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${left.toFixed(2)}`;
+                return `Restante: ${formatCurrency(left, currency)}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              return `${date}: ${formatCurrency(e.amount, currency)}${e.description ? ' - ' + e.description : ''}`;
             },
           },
         },
@@ -211,12 +222,29 @@ export default function Dashboard() {
       ],
     };
 
+    const barOptions = {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y, currency)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (val) => formatCurrency(val, currency),
+          },
+        },
+      },
+    };
+
     content = (
       <>
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>{report.name}</h3>
           <div className='mx-auto max-w-2xl'>
-            <Bar data={barData} />
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
         <div>

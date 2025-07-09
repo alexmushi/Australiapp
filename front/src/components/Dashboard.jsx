@@ -33,6 +33,9 @@ export default function Dashboard() {
   const table = useSummaryTable(category === 'all', currency);
   const [hoverCol, setHoverCol] = useState(null);
 
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat('es', { style: 'currency', currency }).format(value);
+
   if (!report) return <p className='p-4'>Cargando...</p>;
 
   const categoryOptions = [
@@ -121,6 +124,24 @@ export default function Dashboard() {
       ],
     };
 
+    const barOptions = {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) =>
+              `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => formatCurrency(value),
+          },
+        },
+      },
+    };
+
     const expenses = report.expenses;
     const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
     const pieData = {
@@ -139,10 +160,10 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${totalLeft.toFixed(2)}`;
+                return `Restante: ${formatCurrency(totalLeft)}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              return `${date}: ${formatCurrency(e.amount)}${e.description ? ' - ' + e.description : ''}`;
             },
           },
         },
@@ -160,7 +181,7 @@ export default function Dashboard() {
         <div>
           <h3 className='text-lg mb-2'>Por categoría</h3>
           <div className='mx-auto max-w-2xl'>
-            <Bar data={barData} />
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
       </>
@@ -185,10 +206,10 @@ export default function Dashboard() {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataIndex === expenses.length)
-                return `Restante: $${left.toFixed(2)}`;
+                return `Restante: ${formatCurrency(left)}`;
               const e = expenses[ctx.dataIndex];
               const date = new Date(e.date).toLocaleDateString();
-              return `${date}: $${e.amount.toFixed(2)}${e.description ? ' - ' + e.description : ''}`;
+              return `${date}: ${formatCurrency(e.amount)}${e.description ? ' - ' + e.description : ''}`;
             },
           },
         },
@@ -211,12 +232,30 @@ export default function Dashboard() {
       ],
     };
 
+    const barOptions = {
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) =>
+              `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => formatCurrency(value),
+          },
+        },
+      },
+    };
+
     content = (
       <>
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>{report.name}</h3>
           <div className='mx-auto max-w-2xl'>
-            <Bar data={barData} />
+            <Bar data={barData} options={barOptions} />
           </div>
         </div>
         <div>
@@ -348,19 +387,19 @@ export default function Dashboard() {
                     className={cellClass(1)}
                     onMouseEnter={() => setHoverCol(1)}
                   >
-                    {cat.antesBudget.toFixed(2)}
+                    {formatCurrency(cat.antesBudget)}
                   </td>
                   <td
                     className={cellClass(2)}
                     onMouseEnter={() => setHoverCol(2)}
                   >
-                    {cat.antesReal.toFixed(2)}
+                    {formatCurrency(cat.antesReal)}
                   </td>
                   <td
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {(cat.antesBudget - cat.antesReal).toFixed(2)}
+                    {formatCurrency(cat.antesBudget - cat.antesReal)}
                   </td>
                   {cat.months.map((m, idx) => (
                     <React.Fragment key={idx}>
@@ -368,19 +407,19 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3)}
                       >
-                        {m.budget.toFixed(2)}
+                        {formatCurrency(m.budget)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 1)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
                       >
-                        {m.real.toFixed(2)}
+                        {formatCurrency(m.real)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {(m.budget - m.real).toFixed(2)}
+                        {formatCurrency(m.budget - m.real)}
                       </td>
                     </React.Fragment>
                   ))}
@@ -388,13 +427,13 @@ export default function Dashboard() {
                     className={cellClass(4 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
                   >
-                    {cat.totalBudget.toFixed(2)}
+                    {formatCurrency(cat.totalBudget)}
                   </td>
                   <td
                     className={cellClass(5 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
                   >
-                    {cat.totalReal.toFixed(2)}
+                    {formatCurrency(cat.totalReal)}
                   </td>
                 </tr>
               ))}
@@ -410,19 +449,19 @@ export default function Dashboard() {
                     className={cellClass(1)}
                     onMouseEnter={() => setHoverCol(1)}
                   >
-                    {totals.antesBudget.toFixed(2)}
+                    {formatCurrency(totals.antesBudget)}
                   </td>
                   <td
                     className={cellClass(2)}
                     onMouseEnter={() => setHoverCol(2)}
                   >
-                    {totals.antesReal.toFixed(2)}
+                    {formatCurrency(totals.antesReal)}
                   </td>
                   <td
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {mensualDiffs[0].toFixed(2)}
+                    {formatCurrency(mensualDiffs[0])}
                   </td>
                   {totals.monthTotals.map((m, idx) => (
                     <React.Fragment key={`m-${idx}`}>
@@ -430,19 +469,19 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3)}
                       >
-                        {m.budget.toFixed(2)}
+                        {formatCurrency(m.budget)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 1)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 1)}
                       >
-                        {m.real.toFixed(2)}
+                        {formatCurrency(m.real)}
                       </td>
                       <td
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {mensualDiffs[idx + 1].toFixed(2)}
+                        {formatCurrency(mensualDiffs[idx + 1])}
                       </td>
                     </React.Fragment>
                   ))}
@@ -450,13 +489,13 @@ export default function Dashboard() {
                     className={cellClass(4 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(4 + monthCount * 3)}
                   >
-                    {totals.totalBudget.toFixed(2)}
+                    {formatCurrency(totals.totalBudget)}
                   </td>
                   <td
                     className={cellClass(5 + monthCount * 3)}
                     onMouseEnter={() => setHoverCol(5 + monthCount * 3)}
                   >
-                    {totals.totalReal.toFixed(2)}
+                    {formatCurrency(totals.totalReal)}
                   </td>
                 </tr>
               )}
@@ -480,7 +519,7 @@ export default function Dashboard() {
                     className={cellClass(3)}
                     onMouseEnter={() => setHoverCol(3)}
                   >
-                    {acumulados[0].toFixed(2)}
+                    {formatCurrency(acumulados[0])}
                   </td>
                   {totals.monthTotals.map((_, idx) => (
                     <React.Fragment key={`a-${idx}`}>
@@ -496,7 +535,7 @@ export default function Dashboard() {
                         className={cellClass(4 + idx * 3 + 2)}
                         onMouseEnter={() => setHoverCol(4 + idx * 3 + 2)}
                       >
-                        {acumulados[idx + 1].toFixed(2)}
+                        {formatCurrency(acumulados[idx + 1])}
                       </td>
                     </React.Fragment>
                   ))}
@@ -515,5 +554,4 @@ export default function Dashboard() {
         </div>
       )}
     </div>
-  );
-}
+  );}

@@ -145,8 +145,13 @@ export default function Dashboard() {
 
     const expenses = report.expenses;
     const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
+    const catNameById = Object.fromEntries(
+      report.categories.map((c) => [c.id, c.name])
+    );
     const pieData = {
-      labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
+      labels: expenses
+        .map((e, i) => catNameById[e.category_id] || `Gasto ${i + 1}`)
+        .concat(['Restante']),
       datasets: [
         {
           data: expenses.map((e) => e.amount).concat([totalLeft]),

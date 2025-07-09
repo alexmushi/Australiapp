@@ -9,3 +9,4 @@
 - [ ] Validación de campos
 - [ ] CRUD de presupuestos
 - [ ] Poder ver un histórico de las tablas (al mostrar el tab de "restaurantes", mostrar gráficas de barras de todos los meses. Si quieres más detalles, dar clic en el mes para ver la de pie)
+- [ ] Actualizar el google sheets al hacer registros

@@ -143,11 +143,22 @@ export default function Dashboard() {
       ],
     };
 
-    const expenses = report.expenses;
+    const catOrder = Object.fromEntries(
+      report.categories.map((c, idx) => [c.id, idx])
+    );
+    const expenses = [...report.expenses].sort(
+      (a, b) => catOrder[a.category_id] - catOrder[b.category_id]
+    );
     const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
     const catNameById = Object.fromEntries(
       report.categories.map((c) => [c.id, c.name])
     );
+    const catColorMap = (() => {
+      const colors = makeColors(report.categories.length);
+      return Object.fromEntries(
+        report.categories.map((c, idx) => [c.id, colors[idx]])
+      );
+    })();
     const pieData = {
       labels: expenses
         .map((e, i) => catNameById[e.category_id] || `Gasto ${i + 1}`)
@@ -155,11 +166,13 @@ export default function Dashboard() {
       datasets: [
         {
           data: expenses.map((e) => e.amount).concat([totalLeft]),
-          backgroundColor: makeColors(expenses.length + 1),
+          backgroundColor: expenses
+            .map((e) => catColorMap[e.category_id])
+            .concat(['hsl(0,0%,80%)']),
         },
       ],
     };
-
+    
     const pieOptions = {
       plugins: {
         tooltip: {

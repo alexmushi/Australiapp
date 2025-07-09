@@ -186,9 +186,22 @@ export default function Dashboard() {
             },
           },
         },
+        legend: {
+          labels: {
+            filter: (legendItem) => {
+              if (legendItem.text === 'Restante') return true;
+              return (
+                legendItem.index ===
+                expenses.findIndex(
+                  (e) => catNameById[e.category_id] === legendItem.text
+                )
+              );
+            },
+          },
+        },
       },
     };
-
+    
     content = (
       <>
         <div className='mb-8'>

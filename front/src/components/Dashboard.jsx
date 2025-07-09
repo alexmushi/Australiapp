@@ -13,6 +13,7 @@ import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
 import useSummaryTable from '../hooks/useSummaryTable.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { formatDate } from '../utils/date.js';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -181,7 +182,7 @@ export default function Dashboard() {
               if (ctx.dataIndex === expenses.length)
                 return `Restante: ${formatCurrency(totalLeft)}`;
               const e = expenses[ctx.dataIndex];
-              const date = new Date(e.date).toLocaleDateString();
+              const date = formatDate(e.date);
               return `${date}: ${formatCurrency(e.amount)}${e.description ? ' - ' + e.description : ''}`;
             },
           },
@@ -201,7 +202,7 @@ export default function Dashboard() {
         },
       },
     };
-    
+
     content = (
       <>
         <div className='mb-8'>
@@ -240,7 +241,7 @@ export default function Dashboard() {
               if (ctx.dataIndex === expenses.length)
                 return `Restante: ${formatCurrency(left)}`;
               const e = expenses[ctx.dataIndex];
-              const date = new Date(e.date).toLocaleDateString();
+              const date = formatDate(e.date);
               return `${date}: ${formatCurrency(e.amount)}${e.description ? ' - ' + e.description : ''}`;
             },
           },

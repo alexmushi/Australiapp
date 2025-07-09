@@ -5,6 +5,7 @@ import CustomSelect from './CustomSelect.jsx';
 import useCurrencies from '../hooks/useCurrencies.js';
 import useCategories from '../hooks/useCategories.js';
 import { createExpense } from '../services/api.js';
+import { formatDate } from '../utils/date.js';
 
 const recurrenceOptions = [
   { value: 'monthly', label: 'Mensual' },
@@ -63,13 +64,6 @@ export default function ExpenseForm() {
       console.error(err);
       setError('No se pudo registrar el gasto');
     }
-  };
-
-  // Helper to format date as dd/mm/yyyy
-  const formatDate = (isoDate) => {
-    if (!isoDate) return '';
-    const [year, month, day] = isoDate.split('-');
-    return `${day}/${month}/${year}`;
   };
 
   // Helper to convert dd/mm/yyyy to yyyy-mm-dd

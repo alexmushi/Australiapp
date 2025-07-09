@@ -35,7 +35,7 @@ export async function getSummary(range = 'month', currency = 'MXN') {
     }
     case 'all':
       start = new Date(0);
-      end = new Date(8640000000000000);
+      end = new Date();
       break;
     case 'year':
       start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);

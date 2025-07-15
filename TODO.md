@@ -10,3 +10,4 @@
 - [ ] CRUD de presupuestos
 - [ ] Poder ver un histórico de las tablas (al mostrar el tab de "restaurantes", mostrar gráficas de barras de todos los meses. Si quieres más detalles, dar clic en el mes para ver la de pie)
 - [ ] Actualizar el google sheets al hacer registros
+- [ ] Checar bug: Registré un gasto el 1 de julio y me lo marcó como parte de junio

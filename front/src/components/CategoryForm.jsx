@@ -85,11 +85,11 @@ export default function CategoryForm() {
           name,
           description,
           recurring: false,
+          currency_code: currency,
           budgets: budgets.map((b) => ({
             month: Number(b.month),
             year: Number(b.year),
             amount: parseFloat(b.amount),
-            currency_code: currency,
           })),
         };
       }

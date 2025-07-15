@@ -12,7 +12,7 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
   const [open, setOpen] = useState(false);
   const currencies = useCurrencies();
   return (
-    <nav className='bg-[#1e1e1e] text-gray-200 p-4 flex items-center gap-4'>
+    <nav className='bg-surface text-gray-200 p-4 flex items-center gap-4'>
       <button
         className='hover:underline'
         onClick={() => onNavigate('home')}
@@ -31,13 +31,19 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
       >
         Categorías
       </button>
+      <button
+        className='hover:underline'
+        onClick={() => onNavigate('expense')}
+      >
+        Registrar gasto
+      </button>
       <div className='flex-grow'></div>
       <div className='relative'>
         <md-icon-button onClick={() => setOpen(!open)}>
           <md-icon>account_circle</md-icon>
         </md-icon-button>
         {open && (
-          <div className='absolute right-0 mt-2 w-40 bg-[#1e1e1e] text-white rounded shadow-md p-2'>
+          <div className='absolute right-0 mt-2 w-72 bg-[#1e1e1e] text-white rounded shadow-md p-2 z-50'>
             <md-outlined-select
               className='w-full mb-2'
               value={currency}

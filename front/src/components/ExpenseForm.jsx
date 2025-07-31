@@ -23,6 +23,7 @@ export default function ExpenseForm() {
   const [date, setDate] = useState(today);
   const [description, setDescription] = useState('');
   const [recurring, setRecurring] = useState(false);
+  const [shared, setShared] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState('monthly');
   const [endDate, setEndDate] = useState('');
   const [message, setMessage] = useState(null);
@@ -45,8 +46,9 @@ export default function ExpenseForm() {
     setError(null);
     setMessage(null);
     try {
+      const numericAmount = parseFloat(amount);
       const payload = {
-        amount: parseFloat(amount),
+        amount: shared ? numericAmount / 2 : numericAmount,
         currency_code: currency,
         category_id: Number(category),
         date,
@@ -127,6 +129,16 @@ export default function ExpenseForm() {
       >
         Descripción
       </CustomInput>
+      <div className='mb-4'>
+        <label className='flex items-center gap-2'>
+          <input
+            type='checkbox'
+            checked={shared}
+            onChange={(e) => setShared(e.target.checked)}
+          />
+          <span>Gasto compartido</span>
+        </label>
+      </div>
       <div className='mb-4'>
         <label className='flex items-center gap-2'>
           <input

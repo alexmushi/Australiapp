@@ -22,6 +22,7 @@ const ranges = [
   { value: 'week', label: 'Esta semana' },
   { value: 'year', label: 'Último año' },
   { value: 'all', label: 'Todo' },
+  { value: 'custom', label: 'Elegir mes' },
 ];
 
 export default function Dashboard() {
@@ -29,13 +30,16 @@ export default function Dashboard() {
   const categories = useCategories();
   const [range, setRange] = useState('month');
   const [category, setCategory] = useState('all');
+  const [month, setMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7)
+  );
   const currency = user?.default_currency_code || 'MXN';
   const formatCurrency = (v) =>
     new Intl.NumberFormat('es', {
       style: 'currency',
       currency,
     }).format(v);
-  const report = useReport(range, category, currency);
+  const report = useReport(range, category, currency, range === 'custom' ? month : undefined);
   const table = useSummaryTable(category === 'all', currency);
   const [hoverCol, setHoverCol] = useState(null);
 
@@ -307,6 +311,14 @@ export default function Dashboard() {
             </option>
           ))}
         </select>
+        {range === 'custom' && (
+          <input
+            type='month'
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className='text-black p-1 rounded'
+          />
+        )}
       </div>
       {content}
       {category === 'all' && table && (

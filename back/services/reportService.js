@@ -18,10 +18,17 @@ function convert(amount, from, to, rates) {
   return to === 'MXN' ? toMXN : toMXN * rates[to];
 }
 
-export async function getSummary(range = 'month', currency = 'MXN') {
+export async function getSummary(range = 'month', currency = 'MXN', monthStr) {
   const now = new Date();
+  if (range === 'custom' && monthStr) {
+    const [y, m] = monthStr.split('-').map(Number);
+    if (!Number.isNaN(y) && !Number.isNaN(m)) {
+      now.setFullYear(y);
+      now.setMonth(m - 1);
+    }
+  }
   let start;
-  let end = new Date();
+  let end = new Date(now);
 
   switch (range) {
     case 'week': {
@@ -39,6 +46,10 @@ export async function getSummary(range = 'month', currency = 'MXN') {
       break;
     case 'year':
       start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
+      break;
+    case 'custom':
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       break;
     case 'month':
     default:
@@ -133,8 +144,13 @@ export async function getSummary(range = 'month', currency = 'MXN') {
   };
 }
 
-export async function getCategoryDetail(id, range = 'month', currency = 'MXN') {
-  const summary = await getSummary(range, currency);
+export async function getCategoryDetail(
+  id,
+  range = 'month',
+  currency = 'MXN',
+  monthStr
+) {
+  const summary = await getSummary(range, currency, monthStr);
   const cat = summary.categories.find((c) => c.id === Number(id));
   if (!cat) throw new Error('Categoria no encontrada');
   const expenses = summary.expenses.filter((e) => e.category_id === Number(id));

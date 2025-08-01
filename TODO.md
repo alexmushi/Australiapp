@@ -12,3 +12,4 @@
 - [ ] Actualizar el google sheets al hacer registros
 - [ ] Checar bug: Registré un gasto el 1 de julio y me lo marcó como parte de junio
 - [x] Agregar feature: pago dividido entre dos
+- [ ] Página HTTPS

@@ -13,4 +13,4 @@
 - [x] Agregar feature: pago dividido entre dos
 - [ ] Página HTTPS
 - [ ] Agregar vista de calendario en fecha de registro gasto
-- [ ] Agregar vista de "Seleccionar mes"
+- [x] Agregar vista de "Seleccionar mes"

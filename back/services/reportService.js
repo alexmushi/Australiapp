@@ -23,27 +23,33 @@ export async function getSummary(range = 'month', currency = 'MXN') {
   let start;
   let end = new Date();
 
-  switch (range) {
-    case 'week': {
-      start = new Date(now);
-      const day = start.getDay();
-      const diffToMonday = (day + 6) % 7;
-      start.setDate(start.getDate() - diffToMonday);
-      end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      break;
+  if (/^\d{4}-\d{2}$/.test(range)) {
+    const [y, m] = range.split('-').map(Number);
+    start = new Date(y, m - 1, 1);
+    end = new Date(y, m, 0);
+  } else {
+    switch (range) {
+      case 'week': {
+        start = new Date(now);
+        const day = start.getDay();
+        const diffToMonday = (day + 6) % 7;
+        start.setDate(start.getDate() - diffToMonday);
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        break;
+      }
+      case 'all':
+        start = new Date(0);
+        end = new Date();
+        break;
+      case 'year':
+        start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
+        break;
+      case 'month':
+      default:
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
     }
-    case 'all':
-      start = new Date(0);
-      end = new Date();
-      break;
-    case 'year':
-      start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
-      break;
-    case 'month':
-    default:
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      break;
   }
 
   const categories = await Categoria.findAll({ attributes: ['id', 'name'] });

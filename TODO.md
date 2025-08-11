@@ -13,4 +13,9 @@
 - [x] Agregar feature: pago dividido entre dos
 - [ ] Página HTTPS
 - [ ] Agregar vista de calendario en fecha de registro gasto
-- [ ] Agregar vista de "Seleccionar mes"
+- [x] Agregar vista de "Seleccionar mes"
+- [ ] Agregar selección de categorías que se quieren ver
+- [ ] Eliminar duplicate entries al darle clic dos veces al botón de registrar gasto
+- [ ] Mostrar nombre de gasto en vez de "Gasto 1"
+- [ ] Que NADIE pueda hacer cambios sin la contraseña
+- [x] Bug: Cuando una categoría no tiene presupuesto y se registra más de un gasto, no se visualiza en el pie chart

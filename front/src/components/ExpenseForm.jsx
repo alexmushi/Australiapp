@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CustomInput from './CustomInput.jsx';
 import CustomButton from './CustomButton.jsx';
 import CustomSelect from './CustomSelect.jsx';
+import StatusModal from './StatusModal.jsx';
 import useCurrencies from '../hooks/useCurrencies.js';
 import useCategories from '../hooks/useCategories.js';
 import { createExpense } from '../services/api.js';
@@ -26,8 +27,7 @@ export default function ExpenseForm() {
   const [shared, setShared] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState('monthly');
   const [endDate, setEndDate] = useState('');
-  const [message, setMessage] = useState(null);
-  const [error, setError] = useState(null);
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     if (!currency && currencies.length > 0) {
@@ -43,8 +43,7 @@ export default function ExpenseForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setMessage(null);
+    setStatus('loading');
     try {
       const numericAmount = parseFloat(amount);
       const payload = {
@@ -58,13 +57,13 @@ export default function ExpenseForm() {
         recurrence_end_date: recurring ? endDate || null : null,
       };
       await createExpense(payload);
-      setMessage('Gasto registrado');
+      setStatus('success');
       setAmount('');
       setDescription('');
       setEndDate('');
     } catch (err) {
       console.error(err);
-      setError('No se pudo registrar el gasto');
+      setStatus('error');
     }
   };
 
@@ -76,9 +75,8 @@ export default function ExpenseForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      {error && <p className='text-red-500 mb-2'>{error}</p>}
-      {message && <p className='text-green-500 mb-2'>{message}</p>}
+    <>
+      <form onSubmit={handleSubmit} noValidate>
       <CustomInput
         name='amount'
         id='amount'
@@ -171,9 +169,12 @@ export default function ExpenseForm() {
           </CustomSelect>
         </>
       )}
-      <CustomButton type='submit' isPrimary>
+      <CustomButton type='submit' isPrimary disabled={status === 'loading'}>
         Guardar
       </CustomButton>
-    </form>
+      </form>
+      <StatusModal status={status} onClose={() => setStatus(null)} />
+    </>
   );
 }
+

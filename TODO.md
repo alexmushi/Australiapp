@@ -4,7 +4,7 @@
 - [ ] Módulo de notificaciones
 - [ ] Módulo de revisor
 - [x] Despliegue con respaldos semanales
-- [ ] Usar modales de confirmación/error
+- [x] Usar modales de confirmación/error
 - [ ] Checar si mi método de divisas es correcto: Si en un futuro el AUD cuesta 1 MXN, no joderá mi historial?
 - [ ] Validación de campos
 - [ ] CRUD de presupuestos

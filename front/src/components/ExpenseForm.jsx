@@ -78,12 +78,26 @@ export default function ExpenseForm() {
     <>
       <form onSubmit={handleSubmit} noValidate>
       <CustomInput
+        name='description'
+        id='description'
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder='Descripción (opcional)'
+      >
+        Descripción
+      </CustomInput>
+      <CustomInput
         name='amount'
         id='amount'
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        placeholder='0.00'
+        onChange={(e) => {
+          const value = e.target.value;
+          if (/^\d*\.?\d*$/.test(value)) {
+            setAmount(value);
+          }
+        }}        placeholder='0.00'
         inputMode='decimal'
+        pattern='\d*\.?\d*'
         required
       >
         Monto
@@ -117,15 +131,6 @@ export default function ExpenseForm() {
         required
       >
         Fecha
-      </CustomInput>
-      <CustomInput
-        name='description'
-        id='description'
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder='Descripción (opcional)'
-      >
-        Descripción
       </CustomInput>
       <div className='mb-4'>
         <label className='flex items-center gap-2'>

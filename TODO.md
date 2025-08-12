@@ -3,20 +3,20 @@
 - [ ] Si se pasa el presupuesto por dos meses seguidos, agregar una alerta cuando se esté registrando una compra con ese rubro.
 - [ ] Módulo de notificaciones
 - [ ] Módulo de revisor
-- [x] Despliegue con respaldos semanales
-- [x] Usar modales de confirmación/error
 - [ ] Checar si mi método de divisas es correcto: Si en un futuro el AUD cuesta 1 MXN, no joderá mi historial?
-- [x] Validación de campos
 - [ ] CRUD de presupuestos
 - [ ] Poder ver un histórico de las tablas (al mostrar el tab de "restaurantes", mostrar gráficas de barras de todos los meses. Si quieres más detalles, dar clic en el mes para ver la de pie)
 - [ ] Checar bug: Registré un gasto el 1 de julio y me lo marcó como parte de junio
-- [x] Agregar feature: pago dividido entre dos
 - [ ] Página HTTPS
 - [ ] Agregar vista de calendario en fecha de registro gasto
-- [x] Agregar vista de "Seleccionar mes"
-- [ ] Agregar selección de categorías que se quieren ver
-- [x] Eliminar duplicate entries al darle clic dos veces al botón de registrar gasto
 - [ ] Mostrar nombre de gasto en vez de "Gasto 1"
 - [ ] Que NADIE pueda hacer cambios sin la contraseña
-- [x] Bug: Cuando una categoría no tiene presupuesto y se registra más de un gasto, no se visualiza en el pie chart
 - [ ] Agregar barra de porcentaje
+- [x] Despliegue con respaldos semanales
+- [x] Usar modales de confirmación/error
+- [x] Validación de campos
+- [x] Agregar feature: pago dividido entre dos
+- [x] Agregar vista de "Seleccionar mes"
+- [x] Agregar selección de categorías que se quieren ver
+- [x] Eliminar duplicate entries al darle clic dos veces al botón de registrar gasto
+- [x] Bug: Cuando una categoría no tiene presupuesto y se registra más de un gasto, no se visualiza en el pie chart

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -28,9 +28,20 @@ const ranges = [
 export default function Dashboard() {
   const { user } = useAuth();
   const categories = useCategories();
+  const LOCAL_KEY = 'dashboard_selected_categories';
   const [range, setRange] = useState('month');
-  const [selectedCategories, setSelectedCategories] = useState(['all']);
-  const [month, setMonth] = useState(() =>
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    const stored = localStorage.getItem(LOCAL_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      } catch (e) {
+        console.error('Failed to parse stored categories', e);
+      }
+    }
+    return ['all'];
+  });  const [month, setMonth] = useState(() =>
     new Date().toISOString().slice(0, 7)
   );
   const currency = user?.default_currency_code || 'MXN';
@@ -52,6 +63,10 @@ export default function Dashboard() {
     currency
   );
   const [hoverCol, setHoverCol] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(selectedCategories));
+  }, [selectedCategories]);
 
   if (!report) return <p className='p-4'>Cargando...</p>;
 

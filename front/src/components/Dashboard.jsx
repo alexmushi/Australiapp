@@ -29,7 +29,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const categories = useCategories();
   const [range, setRange] = useState('month');
-  const [category, setCategory] = useState('all');
+  // allow selecting multiple categories. default to 'all'
+  const [selectedCategories, setSelectedCategories] = useState(['all']);
   const [month, setMonth] = useState(() =>
     new Date().toISOString().slice(0, 7)
   );
@@ -39,8 +40,18 @@ export default function Dashboard() {
       style: 'currency',
       currency,
     }).format(v);
-  const report = useReport(range, category, currency, range === 'custom' ? month : undefined);
-  const table = useSummaryTable(category === 'all', currency);
+
+  // decide which category param to fetch:
+  const isAll = selectedCategories.includes('all');
+  const isSingle = selectedCategories.length === 1 && !isAll;
+  const categoryParam = isSingle ? selectedCategories[0] : 'all';
+  const report = useReport(
+    range,
+    categoryParam,
+    currency,
+    range === 'custom' ? month : undefined
+  );
+  const table = useSummaryTable(categoryParam === 'all', currency);
   const [hoverCol, setHoverCol] = useState(null);
 
   if (!report) return <p className='p-4'>Cargando...</p>;
@@ -126,11 +137,18 @@ export default function Dashboard() {
   }
 
   let content;
-  if (category === 'all') {
-    if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
-    const catLabels = report.categories.map((c) => c.name);
-    const expenseData = report.categories.map((c) => c.expenses);
-    const budgetData = report.categories.map((c) => c.budget);
+  if (!isSingle) {
+    if (!Array.isArray(report.categories))
+      return <p className='p-4'>Cargando...</p>;
+
+    const filteredCats = isAll
+      ? report.categories
+      : report.categories.filter((c) =>
+          selectedCategories.includes(String(c.id))
+        );
+    const catLabels = filteredCats.map((c) => c.name);
+    const expenseData = filteredCats.map((c) => c.expenses);
+    const budgetData = filteredCats.map((c) => c.budget);
 
     const barData = {
       labels: catLabels,
@@ -149,19 +167,23 @@ export default function Dashboard() {
     };
 
     const catOrder = Object.fromEntries(
-      report.categories.map((c, idx) => [c.id, idx])
+      filteredCats.map((c, idx) => [c.id, idx])
     );
-    const expenses = [...report.expenses].sort(
-      (a, b) => catOrder[a.category_id] - catOrder[b.category_id]
-    );
-    const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
+    const expenses = report.expenses
+      .filter((e) =>
+        isAll ? true : selectedCategories.includes(String(e.category_id))
+      )
+      .sort((a, b) => catOrder[a.category_id] - catOrder[b.category_id]);
+    const totalBudget = filteredCats.reduce((s, c) => s + c.budget, 0);
+    const totalExpenses = filteredCats.reduce((s, c) => s + c.expenses, 0);
+    const totalLeft = Math.max(totalBudget - totalExpenses, 0);
     const catNameById = Object.fromEntries(
-      report.categories.map((c) => [c.id, c.name])
+      filteredCats.map((c) => [c.id, c.name])
     );
     const catColorMap = (() => {
-      const colors = makeColors(report.categories.length);
+      const colors = makeColors(filteredCats.length);
       return Object.fromEntries(
-        report.categories.map((c, idx) => [c.id, colors[idx]])
+        filteredCats.map((c, idx) => [c.id, colors[idx]])
       );
     })();
     const pieData = {
@@ -177,7 +199,7 @@ export default function Dashboard() {
         },
       ],
     };
-    
+
     const pieOptions = {
       plugins: {
         tooltip: {
@@ -290,8 +312,16 @@ export default function Dashboard() {
     <div className='p-4 max-w-5xl mx-auto'>
       <div className='flex gap-4 mb-4'>
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          multiple
+          value={selectedCategories}
+          onChange={(e) => {
+            const values = Array.from(e.target.selectedOptions).map(
+              (o) => o.value
+            );
+            setSelectedCategories(
+              values.includes('all') ? ['all'] : values
+            );
+          }}
           className='text-black p-1 rounded'
         >
           {categoryOptions.map((c) => (
@@ -321,7 +351,7 @@ export default function Dashboard() {
         )}
       </div>
       {content}
-      {category === 'all' && table && (
+      {isAll && table && (
         <div className='overflow-x-auto mt-8'>
           <table
             className='min-w-max text-sm border-collapse whitespace-nowrap crosshair-table'

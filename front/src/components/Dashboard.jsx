@@ -217,6 +217,36 @@ export default function Dashboard() {
             <Bar data={barData} options={barOptions} />
           </div>
         </div>
+        <div className='mt-8'>
+          <h3 className='text-lg mb-2'>Avance por categoría</h3>
+          <div className='space-y-4'>
+            {report.categories.map((c) => {
+              const left = c.budget - c.expenses;
+              const percent = c.budget > 0 ? (c.expenses / c.budget) * 100 : c.expenses > 0 ? 100 : 0;
+              const width = Math.min(percent, 100);
+              const over = percent > 100 || c.budget === 0;
+              return (
+                <div key={c.id}>
+                  <div className='flex justify-between text-sm mb-1'>
+                    <span>{c.name}</span>
+                    <span className={over ? 'text-red-400' : ''}>
+                      {percent.toFixed(0)}% -
+                      {left >= 0
+                        ? ` ${formatCurrency(left)} restante`
+                        : ` ${formatCurrency(-left)} de más`}
+                    </span>
+                  </div>
+                  <div className='w-full h-4 bg-gray-700 rounded'>
+                    <div
+                      className={`h-4 rounded ${over ? 'bg-red-500' : 'bg-primary'}`}
+                      style={{ width: `${width}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </>
     );
   } else {

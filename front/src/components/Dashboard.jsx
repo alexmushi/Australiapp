@@ -29,7 +29,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const categories = useCategories();
   const [range, setRange] = useState('month');
-  const [category, setCategory] = useState('all');
+  const [selectedCategories, setSelectedCategories] = useState(['all']);
   const [month, setMonth] = useState(() =>
     new Date().toISOString().slice(0, 7)
   );
@@ -39,8 +39,18 @@ export default function Dashboard() {
       style: 'currency',
       currency,
     }).format(v);
-  const report = useReport(range, category, currency, range === 'custom' ? month : undefined);
-  const table = useSummaryTable(category === 'all', currency);
+  const categoryParam =
+    selectedCategories.length === 1 ? selectedCategories[0] : 'all';
+  const report = useReport(
+    range,
+    categoryParam,
+    currency,
+    range === 'custom' ? month : undefined
+  );
+  const table = useSummaryTable(
+    selectedCategories.length === 1 && selectedCategories[0] === 'all',
+    currency
+  );
   const [hoverCol, setHoverCol] = useState(null);
 
   if (!report) return <p className='p-4'>Cargando...</p>;
@@ -126,11 +136,20 @@ export default function Dashboard() {
   }
 
   let content;
-  if (category === 'all') {
-    if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
-    const catLabels = report.categories.map((c) => c.name);
-    const expenseData = report.categories.map((c) => c.expenses);
-    const budgetData = report.categories.map((c) => c.budget);
+  if (selectedCategories.length !== 1 || selectedCategories[0] === 'all') {
+    if (!Array.isArray(report.categories))
+      return <p className='p-4'>Cargando...</p>;
+    const selectedSet = new Set(
+      selectedCategories.includes('all')
+        ? report.categories.map((c) => String(c.id))
+        : selectedCategories
+    );
+    const filteredCategories = report.categories.filter((c) =>
+      selectedSet.has(String(c.id))
+    );
+    const catLabels = filteredCategories.map((c) => c.name);
+    const expenseData = filteredCategories.map((c) => c.expenses);
+    const budgetData = filteredCategories.map((c) => c.budget);
 
     const barData = {
       labels: catLabels,
@@ -149,19 +168,27 @@ export default function Dashboard() {
     };
 
     const catOrder = Object.fromEntries(
-      report.categories.map((c, idx) => [c.id, idx])
+      filteredCategories.map((c, idx) => [c.id, idx])
     );
-    const expenses = [...report.expenses].sort(
-      (a, b) => catOrder[a.category_id] - catOrder[b.category_id]
+    const expenses = report.expenses
+      .filter((e) => selectedSet.has(String(e.category_id)))
+      .sort((a, b) => catOrder[a.category_id] - catOrder[b.category_id]);
+    const totalBudget = filteredCategories.reduce(
+      (s, c) => s + c.budget,
+      0
     );
-    const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
+    const totalExpenses = filteredCategories.reduce(
+      (s, c) => s + c.expenses,
+      0
+    );
+    const totalLeft = Math.max(totalBudget - totalExpenses, 0);
     const catNameById = Object.fromEntries(
-      report.categories.map((c) => [c.id, c.name])
+      filteredCategories.map((c) => [c.id, c.name])
     );
     const catColorMap = (() => {
-      const colors = makeColors(report.categories.length);
+      const colors = makeColors(filteredCategories.length);
       return Object.fromEntries(
-        report.categories.map((c, idx) => [c.id, colors[idx]])
+        filteredCategories.map((c, idx) => [c.id, colors[idx]])
       );
     })();
     const pieData = {
@@ -177,7 +204,7 @@ export default function Dashboard() {
         },
       ],
     };
-    
+
     const pieOptions = {
       plugins: {
         tooltip: {
@@ -187,8 +214,10 @@ export default function Dashboard() {
                 return `Restante: ${formatCurrency(totalLeft)}`;
               const e = expenses[ctx.dataIndex];
               const date = formatDate(e.date);
-              return `${date}: ${formatCurrency(e.amount)}${e.description ? ' - ' + e.description : ''}`;
-            },
+                return `${date}: ${formatCurrency(e.amount)}${
+                  e.description ? ' - ' + e.description : ''
+                }`;
+              },
           },
         },
         legend: {
@@ -290,8 +319,17 @@ export default function Dashboard() {
     <div className='p-4 max-w-5xl mx-auto'>
       <div className='flex gap-4 mb-4'>
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          multiple
+          value={selectedCategories}
+          onChange={(e) => {
+            const values = Array.from(
+              e.target.selectedOptions,
+              (o) => o.value
+            );
+            if (values.includes('all') || values.length === 0)
+              setSelectedCategories(['all']);
+            else setSelectedCategories(values);
+          }}
           className='text-black p-1 rounded'
         >
           {categoryOptions.map((c) => (
@@ -321,7 +359,9 @@ export default function Dashboard() {
         )}
       </div>
       {content}
-      {category === 'all' && table && (
+      {selectedCategories.length === 1 &&
+        selectedCategories[0] === 'all' &&
+        table && (
         <div className='overflow-x-auto mt-8'>
           <table
             className='min-w-max text-sm border-collapse whitespace-nowrap crosshair-table'

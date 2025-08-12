@@ -101,6 +101,29 @@ export default function Dashboard() {
     },
   };
 
+  const renderBudgetBar = (budget, expenses) => {
+    const diff = budget - expenses;
+    const percentage =
+      budget > 0 ? (expenses / budget) * 100 : expenses > 0 ? 100 : 0;
+    const barColor = percentage > 100 ? 'bg-red-500' : 'bg-green-500';
+    return (
+      <div className='mb-4'>
+        <div className='flex justify-between text-sm mb-1'>
+          <span>{percentage.toFixed(0)}%</span>
+          <span>
+            {formatCurrency(Math.abs(diff))} {diff >= 0 ? 'restante' : 'sobre'}
+          </span>
+        </div>
+        <div className='w-full h-4 bg-gray-700 rounded'>
+          <div
+            className={`h-full ${barColor} rounded`}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
+
   const totals = table
     ? (() => {
         const antesBudget = table.categories.reduce(
@@ -197,6 +220,7 @@ export default function Dashboard() {
       0
     );
     const totalLeft = Math.max(totalBudget - totalExpenses, 0);
+    const progressBar = renderBudgetBar(totalBudget, totalExpenses);
     const catNameById = Object.fromEntries(
       filteredCategories.map((c) => [c.id, c.name])
     );
@@ -253,6 +277,7 @@ export default function Dashboard() {
 
     content = (
       <>
+        {progressBar}
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>General</h3>
           <div className='mx-auto max-w-2xl'>
@@ -272,6 +297,7 @@ export default function Dashboard() {
       return <p className='p-4'>Cargando...</p>;
     const expenses = report.expenses.items;
     const left = Math.max(report.budget - report.expenses.total, 0);
+    const progressBar = renderBudgetBar(report.budget, report.expenses.total);
     const pieData = {
       labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
       datasets: [
@@ -315,6 +341,7 @@ export default function Dashboard() {
 
     content = (
       <>
+        {progressBar}
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>{report.name}</h3>
           <div className='mx-auto max-w-2xl'>

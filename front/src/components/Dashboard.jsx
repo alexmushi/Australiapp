@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -19,25 +19,54 @@ ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Le
 
 const ranges = [
   { value: 'month', label: 'Este mes' },
-  { value: 'week', label: 'Esta semana' },
+  // { value: 'week', label: 'Esta semana' }, Desactivado hasta corregirlo
   { value: 'year', label: 'Último año' },
   { value: 'all', label: 'Todo' },
+  { value: 'custom', label: 'Elegir mes' },
 ];
 
 export default function Dashboard() {
   const { user } = useAuth();
   const categories = useCategories();
+  const LOCAL_KEY = 'dashboard_selected_categories';
   const [range, setRange] = useState('month');
-  const [category, setCategory] = useState('all');
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    const stored = localStorage.getItem(LOCAL_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      } catch (e) {
+        console.error('Failed to parse stored categories', e);
+      }
+    }
+    return ['all'];
+  });  const [month, setMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7)
+  );
   const currency = user?.default_currency_code || 'MXN';
   const formatCurrency = (v) =>
     new Intl.NumberFormat('es', {
       style: 'currency',
       currency,
     }).format(v);
-  const report = useReport(range, category, currency);
-  const table = useSummaryTable(category === 'all', currency);
+  const categoryParam =
+    selectedCategories.length === 1 ? selectedCategories[0] : 'all';
+  const report = useReport(
+    range,
+    categoryParam,
+    currency,
+    range === 'custom' ? month : undefined
+  );
+  const table = useSummaryTable(
+    selectedCategories.length === 1 && selectedCategories[0] === 'all',
+    currency
+  );
   const [hoverCol, setHoverCol] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(selectedCategories));
+  }, [selectedCategories]);
 
   if (!report) return <p className='p-4'>Cargando...</p>;
 
@@ -70,6 +99,29 @@ export default function Dashboard() {
         },
       },
     },
+  };
+
+  const renderBudgetBar = (budget, expenses) => {
+    const diff = budget - expenses;
+    const percentage =
+      budget > 0 ? (expenses / budget) * 100 : expenses > 0 ? 100 : 0;
+    const barColor = percentage > 100 ? 'bg-red-500' : 'bg-green-500';
+    return (
+      <div className='mb-4'>
+        <div className='flex justify-between text-sm mb-1'>
+          <span>{percentage.toFixed(0)}%</span>
+          <span>
+            {formatCurrency(Math.abs(diff))} {diff >= 0 ? 'restante' : 'sobre'}
+          </span>
+        </div>
+        <div className='w-full h-4 bg-gray-700 rounded'>
+          <div
+            className={`h-full ${barColor} rounded`}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          ></div>
+        </div>
+      </div>
+    );
   };
 
   const totals = table
@@ -122,11 +174,20 @@ export default function Dashboard() {
   }
 
   let content;
-  if (category === 'all') {
-    if (!Array.isArray(report.categories)) return <p className='p-4'>Cargando...</p>;
-    const catLabels = report.categories.map((c) => c.name);
-    const expenseData = report.categories.map((c) => c.expenses);
-    const budgetData = report.categories.map((c) => c.budget);
+  if (selectedCategories.length !== 1 || selectedCategories[0] === 'all') {
+    if (!Array.isArray(report.categories))
+      return <p className='p-4'>Cargando...</p>;
+    const selectedSet = new Set(
+      selectedCategories.includes('all')
+        ? report.categories.map((c) => String(c.id))
+        : selectedCategories
+    );
+    const filteredCategories = report.categories.filter((c) =>
+      selectedSet.has(String(c.id))
+    );
+    const catLabels = filteredCategories.map((c) => c.name);
+    const expenseData = filteredCategories.map((c) => c.expenses);
+    const budgetData = filteredCategories.map((c) => c.budget);
 
     const barData = {
       labels: catLabels,
@@ -145,19 +206,28 @@ export default function Dashboard() {
     };
 
     const catOrder = Object.fromEntries(
-      report.categories.map((c, idx) => [c.id, idx])
+      filteredCategories.map((c, idx) => [c.id, idx])
     );
-    const expenses = [...report.expenses].sort(
-      (a, b) => catOrder[a.category_id] - catOrder[b.category_id]
+    const expenses = report.expenses
+      .filter((e) => selectedSet.has(String(e.category_id)))
+      .sort((a, b) => catOrder[a.category_id] - catOrder[b.category_id]);
+    const totalBudget = filteredCategories.reduce(
+      (s, c) => s + c.budget,
+      0
     );
-    const totalLeft = Math.max(report.totalBudget - report.totalExpenses, 0);
+    const totalExpenses = filteredCategories.reduce(
+      (s, c) => s + c.expenses,
+      0
+    );
+    const totalLeft = Math.max(totalBudget - totalExpenses, 0);
+    const progressBar = renderBudgetBar(totalBudget, totalExpenses);
     const catNameById = Object.fromEntries(
-      report.categories.map((c) => [c.id, c.name])
+      filteredCategories.map((c) => [c.id, c.name])
     );
     const catColorMap = (() => {
-      const colors = makeColors(report.categories.length);
+      const colors = makeColors(filteredCategories.length);
       return Object.fromEntries(
-        report.categories.map((c, idx) => [c.id, colors[idx]])
+        filteredCategories.map((c, idx) => [c.id, colors[idx]])
       );
     })();
     const pieData = {
@@ -173,7 +243,7 @@ export default function Dashboard() {
         },
       ],
     };
-    
+
     const pieOptions = {
       plugins: {
         tooltip: {
@@ -183,8 +253,10 @@ export default function Dashboard() {
                 return `Restante: ${formatCurrency(totalLeft)}`;
               const e = expenses[ctx.dataIndex];
               const date = formatDate(e.date);
-              return `${date}: ${formatCurrency(e.amount)}${e.description ? ' - ' + e.description : ''}`;
-            },
+                return `${date}: ${formatCurrency(e.amount)}${
+                  e.description ? ' - ' + e.description : ''
+                }`;
+              },
           },
         },
         legend: {
@@ -205,6 +277,7 @@ export default function Dashboard() {
 
     content = (
       <>
+        {progressBar}
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>General</h3>
           <div className='mx-auto max-w-2xl'>
@@ -224,6 +297,7 @@ export default function Dashboard() {
       return <p className='p-4'>Cargando...</p>;
     const expenses = report.expenses.items;
     const left = Math.max(report.budget - report.expenses.total, 0);
+    const progressBar = renderBudgetBar(report.budget, report.expenses.total);
     const pieData = {
       labels: expenses.map((_, i) => `Gasto ${i + 1}`).concat(['Restante']),
       datasets: [
@@ -267,6 +341,7 @@ export default function Dashboard() {
 
     content = (
       <>
+        {progressBar}
         <div className='mb-8'>
           <h3 className='text-lg mb-2'>{report.name}</h3>
           <div className='mx-auto max-w-2xl'>
@@ -286,8 +361,17 @@ export default function Dashboard() {
     <div className='p-4 max-w-5xl mx-auto'>
       <div className='flex gap-4 mb-4'>
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          multiple
+          value={selectedCategories}
+          onChange={(e) => {
+            const values = Array.from(
+              e.target.selectedOptions,
+              (o) => o.value
+            );
+            if (values.includes('all') || values.length === 0)
+              setSelectedCategories(['all']);
+            else setSelectedCategories(values);
+          }}
           className='text-black p-1 rounded'
         >
           {categoryOptions.map((c) => (
@@ -307,9 +391,19 @@ export default function Dashboard() {
             </option>
           ))}
         </select>
+        {range === 'custom' && (
+          <input
+            type='month'
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className='text-black p-1 rounded'
+          />
+        )}
       </div>
       {content}
-      {category === 'all' && table && (
+      {selectedCategories.length === 1 &&
+        selectedCategories[0] === 'all' &&
+        table && (
         <div className='overflow-x-auto mt-8'>
           <table
             className='min-w-max text-sm border-collapse whitespace-nowrap crosshair-table'
@@ -571,3 +665,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

@@ -19,7 +19,7 @@ ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Le
 
 const ranges = [
   { value: 'month', label: 'Este mes' },
-  { value: 'week', label: 'Esta semana' },
+  // { value: 'week', label: 'Esta semana' }, Desactivado hasta corregirlo
   { value: 'year', label: 'Último año' },
   { value: 'all', label: 'Todo' },
   { value: 'custom', label: 'Elegir mes' },
@@ -665,3 +665,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

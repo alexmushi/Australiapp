@@ -19,12 +19,12 @@ export default function Navbar({ onNavigate, onLogout, currency, onCurrencyChang
       >
         Inicio
       </button>
-      <button
+{/*       <button
         className='hover:underline'
         onClick={() => onNavigate('reviewer')}
       >
         Revisores
-      </button>
+      </button> */}
       <button
         className='hover:underline'
         onClick={() => onNavigate('category')}

@@ -11,6 +11,9 @@
 - [ ] Agregar vista de calendario en fecha de registro gasto
 - [ ] Mostrar nombre de gasto en vez de "Gasto 1"
 - [ ] Que NADIE pueda hacer cambios sin la contraseña
+- [ ] Agilizar modales de estatus
+- [ ] Recordar selección de categoría en registrar gasto
+- [ ] Barra de progreso del mes
 - [x] Agregar barra de porcentaje
 - [x] Despliegue con respaldos semanales
 - [x] Usar modales de confirmación/error

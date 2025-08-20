@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { loginUser, registerUser, updateUserCurrency } from '../services/api.js';
+import { loginUser, /* registerUser, */ updateUserCurrency } from '../services/api.js';
 
 const AuthContext = createContext(null);
 
@@ -28,10 +28,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (data) => {
-    const u = await registerUser(data);
-    setUser(u);
-  };
+
+  // const register = async (data) => {
+  //   const u = await registerUser(data);
+  //   setUser(u);
+  // };
 
   const changeCurrency = async (code) => {
     if (!user) return;
@@ -48,7 +49,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, changeCurrency }}>
+    <AuthContext.Provider value={{ user, login, logout, changeCurrency }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,7 +6,7 @@ import CustomButton from '../components/CustomButton.jsx';
 import AuthCardError from '../components/auth/AuthCardError.jsx';
 import { FaUser, FaLock } from 'react-icons/fa';
 
-export default function LoginPage({ onSwitch }) {
+export default function LoginPage() {
   const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [remember, setRemember] = useState(false);
@@ -74,7 +74,7 @@ export default function LoginPage({ onSwitch }) {
           />
           <span>Recuérdame</span>
         </label>
-        <p className='text-sm text-gray-600 mb-4'>
+        {/* <p className='text-sm text-gray-600 mb-4'>
           ¿No tienes cuenta?{' '}
           <button
             type='button'
@@ -83,7 +83,7 @@ export default function LoginPage({ onSwitch }) {
           >
             Regístrate
           </button>
-        </p>
+        </p> */}
         <CustomButton type='submit' isPrimary>
           Iniciar sesión
         </CustomButton>

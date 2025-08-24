@@ -5,6 +5,7 @@ import CategoryForm from '../components/CategoryForm.jsx';
 import ExpenseForm from '../components/ExpenseForm.jsx';
 import Navbar from '../components/Navbar.jsx';
 import Dashboard from '../components/Dashboard.jsx';
+import Contact from '../components/Contact.jsx';
 
 export default function HomePage() {
   const { user, logout, changeCurrency } = useAuth();
@@ -45,6 +46,7 @@ export default function HomePage() {
         onCurrencyChange={changeCurrency}
       />
       {content}
+      <Contact />
     </div>
   );
 }

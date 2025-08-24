@@ -17,7 +17,7 @@ It provides a Node.js/Express REST API and a React frontend.
 
 ## Deployment
 
-The application is currently deployed at [australiapp.xyz](https://australiapp.xyz). Only my personal account is active, so resource usage is intentionally low. Want a quick demo? Reach out and I’ll show you around.
+The application is currently deployed at [australiapp.xyz](https://australiapp.xyz). Only my personal account is active, so resource usage is intentionally low.
 
 ## Local Installation
 

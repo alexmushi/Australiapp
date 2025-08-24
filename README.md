@@ -64,4 +64,4 @@ npm run dev
 The backend runs on http://localhost:3000 and the frontend on http://localhost:5173 by default.
 
 
-NOTE: I added the functionality to add more users but commented it all because the website is only used by myself. If you wish to use the deployed version as well, contact me.
+NOTE: I added the functionality to add more users but commented it all because the website is only used by myself.

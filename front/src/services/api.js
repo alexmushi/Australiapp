@@ -6,15 +6,15 @@ const DIVISA_URL = '/api/divisas';
 const EXPENSE_URL = '/api/gastos';
 const REPORT_URL = '/api/reports';
 
-export async function registerUser(data) {
-  const res = await fetch(`${API_URL}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed registration');
-  return res.json();
-}
+// export async function registerUser(data) {
+//   const res = await fetch(`${API_URL}/register`, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify(data),
+//   });
+//   if (!res.ok) throw new Error('Failed registration');
+//   return res.json();
+// }
 
 export async function loginUser(data) {
   const res = await fetch(`${API_URL}/login`, {

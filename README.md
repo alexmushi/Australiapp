@@ -1,5 +1,11 @@
 # Australiapp
 
+
+
+https://github.com/user-attachments/assets/f203c045-af94-4f3f-b432-3fc8f648c6ab
+
+
+
 I made Australiapp as a simple way to track my expenses while I'm studying abroad.
 It provides a Node.js/Express REST API and a React frontend.
 

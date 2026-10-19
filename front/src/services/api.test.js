@@ -3,6 +3,9 @@ import { mockFetch, fail } from '../test/mockFetch.js';
 import {
   createCategory,
   createExpense,
+  deleteIncome,
+  fetchIncomes,
+  saveIncome,
   fetchCategories,
   fetchCurrencies,
   fetchReport,
@@ -14,31 +17,35 @@ import {
 describe('api', () => {
   it('usa las mismas URLs de reportes que espera el backend', async () => {
     const { calls } = mockFetch({ 'GET *': {} });
-    await fetchReport('month', 'all', 'MXN');
-    await fetchReport('custom', 'all', 'AUD', '2025-07');
-    await fetchReport('month', '3', 'MXN', '2025-07');
-    await fetchReport('custom', '3', 'MXN', '2025-07');
+    await fetchReport('month', 'MXN');
+    await fetchReport('month', 'MXN', '2025-07');
+    await fetchReport('custom', 'AUD', '2025-07');
     await fetchSummaryTable('USD');
+    await fetchIncomes();
     expect(calls.map((c) => c.url)).toEqual([
       '/api/reports/summary?range=month&currency=MXN',
+      '/api/reports/summary?range=month&currency=MXN',
       '/api/reports/summary?range=custom&month=2025-07&currency=AUD',
-      '/api/reports/category/3?range=month&currency=MXN',
-      '/api/reports/category/3?range=custom&month=2025-07&currency=MXN',
       '/api/reports/summary-table?currency=USD',
+      '/api/ingresos',
     ]);
   });
 
   it('envía JSON en POST y PUT', async () => {
-    const { calls } = mockFetch({ 'POST *': { id: 1 }, 'PUT *': { id: 1 } });
+    const { calls } = mockFetch({ 'POST *': { id: 1 }, 'PUT *': { id: 1 }, 'DELETE *': { deleted: true } });
     await createExpense({ amount: 5 });
     await createCategory({ name: 'x' });
     await loginUser({ username: 'a', password: 'b' });
     await updateUserCurrency(7, 'AUD');
+    await saveIncome(2025, 8, { amount: 100, currency_code: 'AUD' });
+    await deleteIncome('2025', '08');
     expect(calls).toEqual([
       { method: 'POST', url: '/api/gastos', body: { amount: 5 } },
       { method: 'POST', url: '/api/categorias', body: { name: 'x' } },
       { method: 'POST', url: '/api/auth/login', body: { username: 'a', password: 'b' } },
       { method: 'PUT', url: '/api/users/7/currency', body: { code: 'AUD' } },
+      { method: 'PUT', url: '/api/ingresos/2025/8', body: { amount: 100, currency_code: 'AUD' } },
+      { method: 'DELETE', url: '/api/ingresos/2025/8', body: undefined },
     ]);
   });
 

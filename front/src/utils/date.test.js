@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { currentMonthISO, formatDate, isValidISODate, monthLabel, todayISO } from './date.js';
+import { currentMonthISO, formatDate, isValidISODate, monthLabel, shiftMonth, toMonthISO, todayISO } from './date.js';
 
 describe('formatDate', () => {
   it('formatea fechas simples', () => {
@@ -38,5 +38,16 @@ describe('monthLabel', () => {
   it('nombra el mes', () => {
     expect(monthLabel('2025-07')).toBe('julio 2025');
     expect(monthLabel('2025-13')).toBe('');
+  });
+});
+
+describe('shiftMonth / toMonthISO', () => {
+  it('mueve meses cruzando años', () => {
+    expect(shiftMonth('2025-01', -1)).toBe('2024-12');
+    expect(shiftMonth('2025-12', 1)).toBe('2026-01');
+    expect(shiftMonth('2025-07', -13)).toBe('2024-06');
+  });
+  it('formatea periodos', () => {
+    expect(toMonthISO({ year: 2025, month: 7 })).toBe('2025-07');
   });
 });

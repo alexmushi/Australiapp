@@ -5,6 +5,7 @@ const USER_URL = '/api/users';
 const DIVISA_URL = '/api/divisas';
 const EXPENSE_URL = '/api/gastos';
 const REPORT_URL = '/api/reports';
+const INCOME_URL = '/api/ingresos';
 
 export class ApiError extends Error {
   constructor(message, status, serverMessage) {
@@ -79,18 +80,32 @@ export function createExpense(data) {
   return request(EXPENSE_URL, 'Failed to create expense', { method: 'POST', body: data });
 }
 
-export function fetchReport(range = 'month', category = 'all', currency = 'MXN', month) {
+export function fetchReport(range = 'month', currency = 'MXN', month) {
   const params = new URLSearchParams({ range });
   if (range === 'custom' && month) params.set('month', month);
   params.set('currency', currency);
-  const url =
-    category === 'all'
-      ? `${REPORT_URL}/summary?${params}`
-      : `${REPORT_URL}/category/${encodeURIComponent(category)}?${params}`;
-  return request(url, 'Failed to fetch report');
+  return request(`${REPORT_URL}/summary?${params}`, 'Failed to fetch report');
 }
 
 export function fetchSummaryTable(currency = 'MXN') {
   const params = new URLSearchParams({ currency });
   return request(`${REPORT_URL}/summary-table?${params}`, 'Failed to fetch report table');
+}
+
+export function fetchIncomes() {
+  return request(INCOME_URL, 'Failed to fetch incomes');
+}
+
+/** Crea o reemplaza el ingreso que financia el mes indicado. */
+export function saveIncome(year, month, data) {
+  return request(`${INCOME_URL}/${Number(year)}/${Number(month)}`, 'Failed to save income', {
+    method: 'PUT',
+    body: data,
+  });
+}
+
+export function deleteIncome(year, month) {
+  return request(`${INCOME_URL}/${Number(year)}/${Number(month)}`, 'Failed to delete income', {
+    method: 'DELETE',
+  });
 }

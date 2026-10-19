@@ -1,235 +1,180 @@
-import { Categoria } from '../models/categoria.model.js';
-import { Presupuesto } from '../models/presupuesto.model.js';
-import { Gasto } from '../models/gasto.model.js';
 import { Op } from 'sequelize';
+import { Categoria } from '../models/categoria.model.js';
+import { Gasto } from '../models/gasto.model.js';
+import { Ingreso } from '../models/ingreso.model.js';
 import { getDivisaRates } from './divisaService.js';
+import { badRequest } from '../utils/errors.js';
+import { convert, splitIncome } from '../utils/money.js';
+import {
+  currentMonth,
+  fromIndex,
+  monthEndExclusive,
+  monthIndex,
+  monthOfDate,
+  monthStart,
+  monthsBetween,
+  parseMonthParam,
+} from '../utils/months.js';
 
-function monthsBetween(start, end) {
-  return (
-    end.getFullYear() * 12 + end.getMonth() -
-    (start.getFullYear() * 12 + start.getMonth())
-  ) + 1;
-}
+const RANGES = ['month', 'year', 'all', 'custom'];
+const EMPTY_PLAN = { income: 0, invest: 0, save: 0, spending: 0 };
 
-function convert(amount, from, to, rates) {
-  const val = parseFloat(amount);
-  if (from === to) return val;
-  const toMXN = from === 'MXN' ? val : val / rates[from];
-  return to === 'MXN' ? toMXN : toMXN * rates[to];
-}
+const addPlans = (a, b) => ({
+  income: a.income + b.income,
+  invest: a.invest + b.invest,
+  save: a.save + b.save,
+  spending: a.spending + b.spending,
+});
 
-export async function getSummary(range = 'month', currency = 'MXN', monthStr) {
-  const now = new Date();
-  if (range === 'custom' && monthStr) {
-    const [y, m] = monthStr.split('-').map(Number);
-    if (!Number.isNaN(y) && !Number.isNaN(m)) {
-      now.setFullYear(y);
-      now.setMonth(m - 1);
-    }
+/** Reparto 30/20/50 de cada mes, convertido a la divisa pedida. */
+function planByMonth(incomes, currency, rates) {
+  const map = new Map();
+  for (const inc of incomes) {
+    const split = splitIncome(inc.amount);
+    const conv = (v) => convert(v, inc.currency_code, currency, rates);
+    map.set(monthIndex({ year: inc.period_year, month: inc.period_month }), {
+      income: conv(split.income),
+      invest: conv(split.invest),
+      save: conv(split.save),
+      spending: conv(split.spending),
+    });
   }
-  let start;
-  let end = new Date(now);
+  return map;
+}
 
+/** Meses que abarca un rango. `earliest` solo se usa para 'all'. */
+export function resolveMonths(range, monthStr, now, earliest) {
+  if (!RANGES.includes(range)) throw badRequest('Rango inválido');
+  const current = currentMonth(now);
   switch (range) {
-    case 'week': {
-      start = new Date(now);
-      const day = start.getDay();
-      const diffToMonday = (day + 6) % 7;
-      start.setDate(start.getDate() - diffToMonday);
-      end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      break;
+    case 'custom': {
+      const period = parseMonthParam(monthStr);
+      if (!period) throw badRequest('Mes inválido');
+      return [period];
     }
-    case 'all':
-      start = new Date(0);
-      end = new Date();
-      break;
     case 'year':
-      start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
-      break;
-    case 'custom':
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      break;
+      return monthsBetween(fromIndex(monthIndex(current) - 11), current);
+    case 'all': {
+      const first = earliest && monthIndex(earliest) < monthIndex(current) ? earliest : current;
+      return monthsBetween(first, current);
+    }
     case 'month':
     default:
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      break;
+      return [current];
   }
+}
 
-  const categories = await Categoria.findAll({ attributes: ['id', 'name'] });
-  const expensesAll = await Gasto.findAll({
-    where: { date: { [Op.between]: [start, end] } },
-    attributes: ['id', 'amount', 'currency_code', 'category_id', 'date', 'description'],
-    order: [['date', 'ASC']],
-  });
+/**
+ * Resumen de un periodo: ingreso y su reparto, gasto total y por categoría.
+ * Todos los gastos salen del mismo 50% sin importar la categoría.
+ */
+export async function getSummary(range = 'month', currency = 'MXN', monthStr, now = new Date()) {
+  const current = currentMonth(now);
+  const lastExclusive = range === 'custom' ? null : monthEndExclusive(current);
+
+  // Para 'all' se necesita el primer mes con datos, así que se piden sin límite inferior.
+  let months;
+  let expensesAll;
+  const incomesAll = await Ingreso.findAll();
+  if (range === 'all') {
+    expensesAll = await Gasto.findAll({
+      where: { date: { [Op.lt]: lastExclusive } },
+      order: [['date', 'ASC']],
+    });
+    const candidates = [
+      ...expensesAll.map((e) => monthOfDate(e.date)),
+      ...incomesAll.map((i) => ({ year: i.period_year, month: i.period_month })),
+    ];
+    const earliest = candidates.length
+      ? fromIndex(Math.min(...candidates.map(monthIndex)))
+      : null;
+    months = resolveMonths(range, monthStr, now, earliest);
+  } else {
+    months = resolveMonths(range, monthStr, now);
+    expensesAll = await Gasto.findAll({
+      where: {
+        date: { [Op.gte]: monthStart(months[0]), [Op.lt]: monthEndExclusive(months.at(-1)) },
+      },
+      order: [['date', 'ASC']],
+    });
+  }
 
   const rates = await getDivisaRates();
+  const monthSet = new Set(months.map(monthIndex));
+  const plans = planByMonth(
+    incomesAll.filter((i) => monthSet.has(monthIndex({ year: i.period_year, month: i.period_month }))),
+    currency,
+    rates
+  );
+  const plan = [...plans.values()].reduce(addPlans, EMPTY_PLAN);
+  const missingIncome = months.filter((m) => !plans.has(monthIndex(m)));
 
-  const result = [];
-  let totalBudget = 0;
-  let totalExpenses = 0;
-
-  const DAY = 24 * 60 * 60 * 1000;
-
-  for (const cat of categories) {
-    const budgets = await Presupuesto.findAll({ where: { category_id: cat.id } });
-    let budget = 0;
-    for (const b of budgets) {
-      const recordStart = new Date(b.period_year, b.period_month - 1, 1);
-      const amountConv = convert(b.amount, b.currency_code, currency, rates);
-      if (b.recurring) {
-        const recEnd = b.recurrence_end_date ? new Date(b.recurrence_end_date) : end;
-        if (recEnd >= start && end >= recordStart) {
-          const effectiveStart = start > recordStart ? start : recordStart;
-          const effectiveEnd = end < recEnd ? end : recEnd;
-          if (range === 'week') {
-            let m = new Date(effectiveStart.getFullYear(), effectiveStart.getMonth(), 1);
-            while (m <= effectiveEnd) {
-              const monthStart = new Date(m.getFullYear(), m.getMonth(), 1);
-              const monthEnd = new Date(m.getFullYear(), m.getMonth() + 1, 0);
-              const os = effectiveStart > monthStart ? effectiveStart : monthStart;
-              const oe = effectiveEnd < monthEnd ? effectiveEnd : monthEnd;
-              if (os <= oe) {
-                const daysInMonth = monthEnd.getDate();
-                const overlapDays = Math.floor((oe - os) / DAY) + 1;
-                budget += (overlapDays / daysInMonth) * amountConv;
-              }
-              m.setMonth(m.getMonth() + 1);
-            }
-          } else {
-            const months = monthsBetween(effectiveStart, effectiveEnd);
-            budget += months * amountConv;
-          }
-        }
-      } else {
-        const recordEnd = new Date(b.period_year, b.period_month, 0);
-        if (recordEnd >= start && recordStart <= end) {
-          const effectiveStart = start > recordStart ? start : recordStart;
-          const effectiveEnd = end < recordEnd ? end : recordEnd;
-          if (range === 'week') {
-            const daysInMonth = recordEnd.getDate();
-            const overlapDays = Math.floor((effectiveEnd - effectiveStart) / DAY) + 1;
-            if (overlapDays > 0) {
-              budget += (overlapDays / daysInMonth) * amountConv;
-            }
-          } else if (effectiveStart <= effectiveEnd) {
-            budget += amountConv;
-          }
-        }
-      }
-    }
-
-    const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
-    const spent = catExpenses.reduce(
-      (sum, e) => sum + convert(e.amount, e.currency_code, currency, rates),
-      0
-    );
-    totalBudget += budget;
-    totalExpenses += spent;
-    result.push({ id: cat.id, name: cat.name, budget, expenses: spent });
-  }
-
-  return {
-    categories: result,
-    totalBudget,
-    totalExpenses,
-    expenses: expensesAll.map((e) => ({
-      id: e.id,
-      category_id: e.category_id,
-      amount: convert(e.amount, e.currency_code, currency, rates),
-      date: e.date,
-      description: e.description,
-    })),
-  };
-}
-
-export async function getCategoryDetail(
-  id,
-  range = 'month',
-  currency = 'MXN',
-  monthStr
-) {
-  const summary = await getSummary(range, currency, monthStr);
-  const cat = summary.categories.find((c) => c.id === Number(id));
-  if (!cat) throw new Error('Categoria no encontrada');
-  const expenses = summary.expenses.filter((e) => e.category_id === Number(id));
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-  return {
-    id: cat.id,
-    name: cat.name,
-    budget: cat.budget,
-    expenses: { total, items: expenses },
-  };
-}
-
-export async function getHistoricalTable(currency = 'MXN') {
-  const start = new Date(2025, 5, 1); // Junio 2025
-  const end = new Date(2026, 5, 1); // Junio 2026 inclusive
+  const expenses = expensesAll.map((e) => ({
+    id: e.id,
+    category_id: e.category_id,
+    amount: convert(e.amount, e.currency_code, currency, rates),
+    date: e.date,
+    description: e.description,
+  }));
 
   const categories = await Categoria.findAll({ attributes: ['id', 'name'] });
-  const budgetsAll = await Presupuesto.findAll();
+  const spentByCat = new Map();
+  for (const e of expenses) spentByCat.set(e.category_id, (spentByCat.get(e.category_id) ?? 0) + e.amount);
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+
+  return {
+    months,
+    plan,
+    missingIncome,
+    totalExpenses,
+    remaining: plan.spending - totalExpenses,
+    categories: categories.map((c) => ({ id: c.id, name: c.name, expenses: spentByCat.get(c.id) ?? 0 })),
+    expenses,
+  };
+}
+
+/** Tabla histórica: ingreso, reparto y gasto por categoría de cada mes. */
+export async function getHistoricalTable(currency = 'MXN', now = new Date()) {
+  const current = currentMonth(now);
+  const categories = await Categoria.findAll({ attributes: ['id', 'name'] });
+  const incomesAll = await Ingreso.findAll();
   const expensesAll = await Gasto.findAll({
-    where: { date: { [Op.lte]: end } },
+    where: { date: { [Op.lt]: monthEndExclusive(current) } },
     attributes: ['amount', 'currency_code', 'category_id', 'date'],
   });
-
   const rates = await getDivisaRates();
 
-  // build months array
-  const months = [];
-  const mstart = new Date(start);
-  while (mstart <= end) {
-    months.push({ year: mstart.getFullYear(), month: mstart.getMonth() + 1 });
-    mstart.setMonth(mstart.getMonth() + 1);
+  const incomes = incomesAll.filter(
+    (i) => monthIndex({ year: i.period_year, month: i.period_month }) <= monthIndex(current)
+  );
+  const indices = [
+    monthIndex(current),
+    ...incomes.map((i) => monthIndex({ year: i.period_year, month: i.period_month })),
+    ...expensesAll.map((e) => monthIndex(monthOfDate(e.date))),
+  ];
+  const months = monthsBetween(fromIndex(Math.min(...indices)), current);
+  const first = monthIndex(months[0]);
+
+  const plans = planByMonth(incomes, currency, rates);
+  const planRows = months.map((m) => plans.get(monthIndex(m)) ?? { ...EMPTY_PLAN, missing: true });
+
+  const rows = new Map(categories.map((c) => [c.id, months.map(() => 0)]));
+  const spentRow = months.map(() => 0);
+  for (const e of expensesAll) {
+    const idx = monthIndex(monthOfDate(e.date)) - first;
+    const amount = convert(e.amount, e.currency_code, currency, rates);
+    if (!rows.has(e.category_id)) rows.set(e.category_id, months.map(() => 0));
+    rows.get(e.category_id)[idx] += amount;
+    spentRow[idx] += amount;
   }
 
-  function monthIndex(date) {
-    return (
-      date.getFullYear() * 12 + date.getMonth() -
-      (start.getFullYear() * 12 + start.getMonth())
-    );
-  }
-
-  const table = categories.map((cat) => {
-    const rows = months.map(() => ({ budget: 0, real: 0 }));
-    let antesBudget = 0;
-    let antesReal = 0;
-
-    const catBudgets = budgetsAll.filter((b) => b.category_id === cat.id);
-    for (const b of catBudgets) {
-      const recordStart = new Date(b.period_year, b.period_month - 1, 1);
-      const amount = convert(b.amount, b.currency_code, currency, rates);
-      let recEnd = b.recurring ? b.recurrence_end_date || end : recordStart;
-      recEnd = new Date(recEnd);
-      for (let d = new Date(recordStart); d <= recEnd; d.setMonth(d.getMonth() + 1)) {
-        if (d < start) {
-          antesBudget += amount;
-        } else if (d <= end) {
-          const idx = monthIndex(d);
-          if (idx >= 0 && idx < rows.length) rows[idx].budget += amount;
-        }
-        if (!b.recurring) break;
-      }
-    }
-
-    const catExpenses = expensesAll.filter((e) => e.category_id === cat.id);
-    for (const e of catExpenses) {
-      const d = new Date(e.date);
-      const amount = convert(e.amount, e.currency_code, currency, rates);
-      if (d < start) {
-        antesReal += amount;
-      } else {
-        const idx = monthIndex(new Date(d.getFullYear(), d.getMonth(), 1));
-        if (idx >= 0 && idx < rows.length) rows[idx].real += amount;
-      }
-    }
-
-    const totalBudget = antesBudget + rows.reduce((s, r) => s + r.budget, 0);
-    const totalReal = antesReal + rows.reduce((s, r) => s + r.real, 0);
-
-    return { id: cat.id, name: cat.name, antesBudget, antesReal, months: rows, totalBudget, totalReal };
-  });
-
-  return { start: { year: start.getFullYear(), month: start.getMonth() + 1 }, months, categories: table };
+  return {
+    months,
+    plan: planRows,
+    spent: spentRow,
+    categories: categories.map((c) => {
+      const values = rows.get(c.id);
+      return { id: c.id, name: c.name, months: values, total: values.reduce((s, v) => s + v, 0) };
+    }),
+  };
 }

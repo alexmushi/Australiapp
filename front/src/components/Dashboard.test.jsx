@@ -12,22 +12,31 @@ const CATEGORIES = [
   { id: 2, name: 'Comida' },
 ];
 const SUMMARY = {
-  categories: [
-    { id: 1, name: 'Renta', budget: 1000, expenses: 1000 },
-    { id: 2, name: 'Comida', budget: 500, expenses: 650.5 },
-  ],
-  totalBudget: 1500,
+  months: [{ year: 2025, month: 8 }],
+  plan: { income: 4000, invest: 1200, save: 800, spending: 2000 },
+  missingIncome: [],
   totalExpenses: 1650.5,
+  remaining: 349.5,
+  categories: [
+    { id: 1, name: 'Renta', expenses: 1000 },
+    { id: 2, name: 'Comida', expenses: 650.5 },
+  ],
   expenses: [
-    { id: 1, category_id: 1, amount: 1000, date: '2025-07-01T00:00:00.000Z', description: 'Renta julio' },
-    { id: 2, category_id: 2, amount: 400.25, date: '2025-07-03T00:00:00.000Z', description: null },
-    { id: 3, category_id: 2, amount: 250.25, date: '2025-07-02T00:00:00.000Z', description: 'Súper' },
+    { id: 1, category_id: 1, amount: 1000, date: '2025-08-01T00:00:00.000Z', description: 'Renta agosto' },
+    { id: 2, category_id: 2, amount: 400.25, date: '2025-08-03T00:00:00.000Z', description: null },
+    { id: 3, category_id: 2, amount: 250.25, date: '2025-08-02T00:00:00.000Z', description: 'Súper' },
   ],
 };
 const TABLE = {
-  months: [{ year: 2025, month: 6 }],
+  months: [{ year: 2025, month: 7 }, { year: 2025, month: 8 }],
+  plan: [
+    { income: 0, invest: 0, save: 0, spending: 0, missing: true },
+    { income: 4000, invest: 1200, save: 800, spending: 2000 },
+  ],
+  spent: [100, 1650.5],
   categories: [
-    { id: 1, name: 'Renta', antesBudget: 0, antesReal: 10, months: [{ budget: 1000, real: 1200 }], totalBudget: 1000, totalReal: 1210 },
+    { id: 1, name: 'Renta', months: [100, 1000], total: 1100 },
+    { id: 2, name: 'Comida', months: [0, 650.5], total: 650.5 },
   ],
 };
 
@@ -37,94 +46,114 @@ function setup(routes = {}) {
     'GET /api/categorias': CATEGORIES,
     'GET /api/reports/summary': SUMMARY,
     'GET /api/reports/summary-table': TABLE,
-    'GET /api/reports/category/2': {
-      id: 2,
-      name: 'Comida',
-      budget: 500,
-      expenses: { total: 650.5, items: SUMMARY.expenses.slice(1) },
-    },
     ...routes,
   });
   const user = userEvent.setup();
-  renderWithProviders(<Dashboard />);
-  return { api, user };
+  const onAddIncome = vi.fn();
+  renderWithProviders(<Dashboard onAddIncome={onAddIncome} />);
+  return { api, user, onAddIncome };
 }
 
+const cells = (row) => within(row).getAllByRole('cell').map((c) => c.textContent);
+
 describe('Dashboard', () => {
-  it('muestra totales, estado y movimientos', async () => {
+  it('muestra el reparto 30/20/50 y lo que queda para gastar', async () => {
     setup();
-    expect(await screen.findByTestId('total-spent')).toHaveTextContent('$1,650.50');
-    expect(screen.getByText('gastado de $1,500.00')).toBeInTheDocument();
-    expect(screen.getByText('Presupuesto excedido')).toBeInTheDocument();
-    expect(screen.getByText('110% usado')).toBeInTheDocument();
-    expect(screen.getAllByText('$150.50 sobre')).toHaveLength(2); // total y Comida
-    expect(screen.getByText('Renta julio')).toBeInTheDocument();
+    expect(await screen.findByTestId('remaining')).toHaveTextContent('$349.50');
+    expect(screen.getByText(/restante de \$2,000.00/)).toBeInTheDocument();
+    expect(screen.getByTestId('total-spent')).toHaveTextContent('$1,650.50');
+    expect(screen.getByText('83% usado')).toBeInTheDocument();
+    expect(screen.getByText('Dentro del 50%')).toBeInTheDocument();
+    expect(screen.getByTestId('plan-income')).toHaveTextContent('$4,000.00');
+    expect(screen.getByTestId('plan-invest')).toHaveTextContent('$1,200.00');
+    expect(screen.getByTestId('plan-save')).toHaveTextContent('$800.00');
+    expect(screen.getByTestId('plan-spending')).toHaveTextContent('$2,000.00');
+    expect(screen.getByText('Invertir 30%')).toBeInTheDocument();
+    expect(screen.getByText('Renta agosto')).toBeInTheDocument();
     expect(screen.getByText('Sin descripción')).toBeInTheDocument();
-    expect(screen.getByText('03/07/2025')).toBeInTheDocument();
-    expect(await screen.findByText('Histórico mensual')).toBeInTheDocument();
   });
 
-  it('muestra la tabla histórica con totales', async () => {
-    setup();
-    const table = await screen.findByRole('table');
-    const rows = within(table).getAllByRole('row');
-    const mensual = rows.find((r) => r.textContent.startsWith('Mensual'));
-    expect(within(mensual).getAllByRole('cell').map((c) => c.textContent)).toEqual([
-      'Mensual', '0.00', '10.00', '-10.00', '1,000.00', '1,200.00', '-200.00', '1,000.00', '1,210.00',
-    ]);
-    const acumulado = rows.find((r) => r.textContent.startsWith('Acumulado'));
-    expect(within(acumulado).getAllByRole('cell').map((c) => c.textContent)).toEqual([
-      'Acumulado', '', '', '-10.00', '', '', '-210.00', '', '',
-    ]);
+  it('marca cuando te pasas del 50%', async () => {
+    setup({
+      'GET /api/reports/summary': { ...SUMMARY, plan: { income: 3000, invest: 900, save: 600, spending: 1500 } },
+    });
+    expect(await screen.findByTestId('remaining')).toHaveTextContent('-$150.50');
+    expect(screen.getByText('Te pasaste del 50%')).toBeInTheDocument();
   });
 
-  it('pide el reporte de una categoría al seleccionarla', async () => {
+  it('invita a registrar el ingreso si falta', async () => {
+    const { user, onAddIncome } = setup({
+      'GET /api/reports/summary': {
+        ...SUMMARY,
+        plan: { income: 0, invest: 0, save: 0, spending: 0 },
+        missingIncome: [{ year: 2025, month: 8 }],
+      },
+    });
+    expect(await screen.findByText('Aún no registras tu ingreso')).toBeInTheDocument();
+    expect(screen.getByText(/lo que ganaste en julio 2025/)).toBeInTheDocument();
+    expect(screen.getByTestId('total-spent')).toHaveTextContent('$1,650.50');
+    await user.click(screen.getByRole('button', { name: 'Registrar ingreso' }));
+    expect(onAddIncome).toHaveBeenCalled();
+  });
+
+  it('avisa de meses sin ingreso en periodos largos', async () => {
+    setup({
+      'GET /api/reports/summary': {
+        ...SUMMARY,
+        months: [{ year: 2025, month: 6 }, { year: 2025, month: 7 }, { year: 2025, month: 8 }],
+        missingIncome: [{ year: 2025, month: 6 }, { year: 2025, month: 7 }],
+      },
+    });
+    expect(await screen.findByText(/Sin ingreso registrado en 2 meses: junio 2025, julio 2025/)).toBeInTheDocument();
+  });
+
+  it('el filtro de categorías no cambia lo disponible', async () => {
     const { api, user } = setup();
-    await screen.findByTestId('total-spent');
-    const breakdown = screen.getByRole('heading', { name: 'Por categoría' }).closest('section');
-    await user.click(within(breakdown).getByRole('button', { name: /Comida/ }));
-    await waitFor(() =>
-      expect(api.calls.some((c) => c.url === '/api/reports/category/2?range=month&currency=MXN')).toBe(true)
-    );
-    expect(await screen.findByText('gastado de $500.00')).toBeInTheDocument();
-    expect(screen.queryByText('Histórico mensual')).not.toBeInTheDocument();
+    await screen.findByTestId('remaining');
+    const before = api.calls.length;
+    await user.click(screen.getByRole('button', { name: /Categorías:/ }));
+    await user.click(screen.getByRole('checkbox', { name: 'Comida' }));
+    expect(screen.getByTestId('remaining')).toHaveTextContent('$349.50');
+    expect(screen.getByText('Categorías filtradas · $650.50')).toBeInTheDocument();
+    expect(screen.queryByText('Renta agosto')).not.toBeInTheDocument();
+    expect(screen.getByText('Súper')).toBeInTheDocument();
+    expect(api.calls.length).toBe(before); // se filtra sin pedir otro reporte
     expect(JSON.parse(localStorage.getItem('dashboard_selected_categories'))).toEqual(['2']);
   });
 
-  it('filtra varias categorías sin pedir otro reporte', async () => {
-    const { api, user } = setup({ 'GET /api/categorias': [...CATEGORIES, { id: 3, name: 'Bus' }] });
-    await screen.findByTestId('total-spent');
-    await user.click(screen.getByRole('button', { name: /Categorías:/ }));
-    await user.click(screen.getByRole('checkbox', { name: 'Renta' }));
-    await user.click(screen.getByRole('checkbox', { name: 'Comida' }));
-    await waitFor(() => expect(screen.getByTestId('total-spent')).toHaveTextContent('$1,650.50'));
-    expect(screen.getByRole('button', { name: /Categorías:/ })).toHaveTextContent('2 categorías');
-    const reports = api.calls.filter((c) => c.url.startsWith('/api/reports/') && !c.url.includes('summary-table'));
-    expect(reports.at(-1).url).toBe('/api/reports/summary?range=month&currency=MXN');
+  it('muestra la tabla histórica', async () => {
+    setup();
+    const table = await screen.findByRole('table');
+    const row = (name) => within(table).getByRole('rowheader', { name }).closest('tr');
+    expect(cells(row('Ingreso'))).toEqual(['—', '4,000.00', '4,000.00']);
+    expect(cells(row('Para gastos (50%)'))).toEqual(['—', '2,000.00', '2,000.00']);
+    expect(cells(row('Renta'))).toEqual(['100.00', '1,000.00', '1,100.00']);
+    expect(cells(row('Total gastado'))).toEqual(['100.00', '1,650.50', '1,750.50']);
+    expect(cells(row('Diferencia'))).toEqual(['-100.00', '349.50', '249.50']);
+    expect(cells(row('Acumulado'))).toEqual(['-100.00', '249.50', '']);
   });
 
   it('pide el mes elegido', async () => {
     const { api, user } = setup();
-    await screen.findByTestId('total-spent');
+    await screen.findByTestId('remaining');
     await user.click(screen.getByRole('radio', { name: 'Elegir mes' }));
     await user.click(screen.getByRole('button', { name: 'Mes anterior' }));
-    const urls = api.calls.map((c) => c.url).filter((u) => u.includes('range=custom'));
-    expect(urls.length).toBeGreaterThanOrEqual(2);
-    const months = urls.map((u) => new URLSearchParams(u.split('?')[1]).get('month'));
+    const months = api.calls
+      .map((c) => c.url)
+      .filter((u) => u.includes('range=custom'))
+      .map((u) => new URLSearchParams(u.split('?')[1]).get('month'));
+    expect(months.length).toBeGreaterThanOrEqual(2);
     const [y, m] = months[0].split('-').map(Number);
-    const prev = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
-    expect(months.at(-1)).toBe(prev);
+    expect(months.at(-1)).toBe(m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`);
   });
 
   it('descarta categorías guardadas que ya no existen', async () => {
     localStorage.setItem('dashboard_selected_categories', JSON.stringify(['99']));
-    const { api } = setup();
+    setup();
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem('dashboard_selected_categories'))).toEqual(['all'])
     );
-    expect(await screen.findByTestId('total-spent')).toHaveTextContent('$1,650.50');
-    expect(api.calls.filter((c) => c.url.includes('/category/'))).toHaveLength(0);
-    expect(screen.queryByText('No se pudo cargar el resumen')).not.toBeInTheDocument();
+    expect(await screen.findByText('Renta agosto')).toBeInTheDocument();
   });
 
   it('muestra un error con opción de reintentar', async () => {
@@ -134,6 +163,6 @@ describe('Dashboard', () => {
     });
     expect(await screen.findByText('No se pudo cargar el resumen')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Reintentar/ }));
-    expect(await screen.findByTestId('total-spent')).toHaveTextContent('$1,650.50');
+    expect(await screen.findByTestId('remaining')).toHaveTextContent('$349.50');
   });
 });

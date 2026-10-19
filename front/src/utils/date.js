@@ -47,7 +47,13 @@ export const monthLabel = (monthISO) => {
   return `${MONTHS_LONG[m - 1]} ${y}`;
 };
 
-export const MONTH_OPTIONS = MONTHS_SHORT.map((label, i) => ({
-  value: String(i + 1),
-  label,
-}));
+
+/** Mes anterior a '2025-07' -> '2025-06'. */
+export function shiftMonth(monthISO, delta) {
+  const [y, m] = String(monthISO).split('-').map(Number);
+  const total = y * 12 + (m - 1) + delta;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`;
+}
+
+/** { year, month } -> '2025-07' */
+export const toMonthISO = ({ year, month }) => `${year}-${String(month).padStart(2, '0')}`;

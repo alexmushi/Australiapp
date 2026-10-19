@@ -7,7 +7,15 @@ import { USER, signIn } from './test/render.jsx';
 
 vi.mock('react-chartjs-2', () => ({ Doughnut: () => <div data-testid='doughnut' /> }));
 
-const emptyReport = { categories: [], totalBudget: 0, totalExpenses: 0, expenses: [] };
+const emptyReport = {
+  months: [{ year: 2025, month: 8 }],
+  plan: { income: 0, invest: 0, save: 0, spending: 0 },
+  missingIncome: [{ year: 2025, month: 8 }],
+  totalExpenses: 0,
+  remaining: 0,
+  categories: [],
+  expenses: [],
+};
 
 function api(extra = {}) {
   return mockFetch({
@@ -16,7 +24,8 @@ function api(extra = {}) {
     'GET /api/categorias': [],
     'GET /api/divisas': ['AUD', 'MXN'],
     'GET /api/reports/summary': emptyReport,
-    'GET /api/reports/summary-table': { months: [], categories: [] },
+    'GET /api/reports/summary-table': { months: [], plan: [], spent: [], categories: [] },
+    'GET /api/ingresos': [],
     'PUT /api/users/1/currency': ({ body }) => ({ ...USER, default_currency_code: body.code }),
     ...extra,
   });
@@ -88,9 +97,22 @@ describe('App', () => {
     await user.click(within(nav).getByRole('button', { name: 'Registrar gasto' }));
     expect(screen.getByRole('heading', { name: 'Registrar gasto', level: 1 })).toBeInTheDocument();
     expect(window.location.hash).toBe('#/gasto');
+    await user.click(within(nav).getByRole('button', { name: 'Ingresos' }));
+    expect(window.location.hash).toBe('#/ingresos');
+    expect(screen.getByRole('button', { name: 'Guardar ingreso' })).toBeInTheDocument();
     await user.click(within(nav).getByRole('button', { name: 'Nueva categoría' }));
     expect(window.location.hash).toBe('#/categoria');
     expect(screen.getByRole('button', { name: 'Crear categoría' })).toBeInTheDocument();
+  });
+
+  it('el aviso de ingreso faltante lleva a Ingresos', async () => {
+    api();
+    signIn();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Registrar ingreso' }));
+    expect(window.location.hash).toBe('#/ingresos');
+    expect(screen.getByRole('heading', { name: 'Ingresos', level: 1 })).toBeInTheDocument();
   });
 
   it('abre la vista indicada en el hash', () => {

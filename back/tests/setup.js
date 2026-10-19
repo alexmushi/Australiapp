@@ -1,2 +1,3 @@
-// Fija la zona horaria para que los cálculos con fechas sean deterministas.
-process.env.TZ = 'UTC';
+// Zona horaria con desfase negativo: es donde fallaba la asignación de meses
+// (un gasto del 1 de julio aparecía en junio). Los tests deben pasar igual.
+process.env.TZ = 'America/Mexico_City';

@@ -5,8 +5,11 @@ It provides a Node.js/Express REST API and a React frontend.
 
 ## Features
 - User authentication and authorization
-- Manage categories, currencies, budgets, and expenses
-- Generate reports and visualizations
+- Monthly budget from income: enter what you earned last month and it is split into
+  30% to invest, 20% to save and 50% for spending
+- Every expense, whatever its category, is subtracted from that same 50%
+- Categories to classify expenses, multiple currencies
+- Reports: available vs. spent, breakdown by category and a monthly history table
 - Updated currency exchange rates using cron jobs with exchangerate API
 
 ## Deployment
@@ -48,6 +51,9 @@ DB_PASS=mypassword
 DB_NAME=mydatabase
 ```
 
+The `ingresos` table is created automatically the first time the backend starts.
+Old per-category budgets (`presupuestos`) are no longer used but are left untouched.
+
 ### 5. Run the app
 Start the backend in one terminal:
 ```bash
@@ -68,7 +74,7 @@ From the repository root (after installing dependencies in `back` and `front`):
 ```bash
 npm test
 ```
-This runs the backend suite (report, category and expense services) and the frontend suite
+This runs the backend suite (income split, reports, month boundaries, validation) and the frontend suite
 (money/date utilities, API contract, forms, login and dashboard) with Vitest. Run them after
 every change. Individual suites: `npm test --prefix back` / `npm test --prefix front`.
 

@@ -1,5 +1,3 @@
-import { budgetPercentage } from './money.js';
-
 export const SERIES_COUNT = 8;
 
 /**
@@ -13,47 +11,52 @@ export function categoryColorMap(categories) {
   );
 }
 
-/** Estado de un presupuesto: porcentaje usado y cuánto queda o sobra. */
-export function budgetStatus(budget, spent) {
-  const diff = budget - spent;
+/** Cuánto del dinero para gastos (50%) se ha usado y cuánto queda o sobra. */
+export function poolStatus(pool, spent) {
+  const diff = pool - spent;
   return {
-    budget,
+    pool,
     spent,
-    percentage: budgetPercentage(budget, spent),
+    percentage: pool > 0 ? (spent / pool) * 100 : spent > 0 ? 100 : 0,
     remaining: Math.max(diff, 0),
     over: Math.max(-diff, 0),
-    isOver: diff < 0,
+    isOver: diff < -0.004,
   };
 }
 
 /**
- * Vista del resumen (todas o varias categorías). Mismos totales que el reporte
- * del servidor, limitados a las categorías seleccionadas.
+ * Vista del resumen. El reparto y lo disponible son globales (todas las
+ * categorías comparten el mismo 50%); el filtro de categorías solo acota el
+ * desglose, la dona y la lista de movimientos.
  */
 export function buildSummaryView(report, selectedCategories) {
   const all = selectedCategories.includes('all');
   const selectedSet = new Set(all ? report.categories.map((c) => String(c.id)) : selectedCategories);
+  const nameById = Object.fromEntries(report.categories.map((c) => [String(c.id), c.name]));
+  const totalSpent = report.expenses.reduce((s, e) => s + e.amount, 0);
+  const pool = report.plan.spending;
+
   const categories = report.categories
     .filter((c) => selectedSet.has(String(c.id)))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-  const nameById = Object.fromEntries(report.categories.map((c) => [String(c.id), c.name]));
+    .sort((a, b) => b.expenses - a.expenses || a.name.localeCompare(b.name, 'es'))
+    .map((c) => ({
+      ...c,
+      shareOfSpent: totalSpent > 0 ? (c.expenses / totalSpent) * 100 : 0,
+      shareOfPool: pool > 0 ? (c.expenses / pool) * 100 : 0,
+    }));
   const expenses = report.expenses
     .filter((e) => selectedSet.has(String(e.category_id)))
     .map((e) => ({ ...e, categoryName: nameById[String(e.category_id)] ?? '' }));
-  const totalBudget = categories.reduce((s, c) => s + c.budget, 0);
-  const totalExpenses = categories.reduce((s, c) => s + c.expenses, 0);
-  return { categories, expenses, ...budgetStatus(totalBudget, totalExpenses) };
-}
 
-/** Vista de una sola categoría (respuesta de /reports/category/:id). */
-export function buildCategoryView(report) {
-  const expenses = report.expenses.items.map((e) => ({ ...e, categoryName: report.name }));
   return {
-    categories: [
-      { id: report.id, name: report.name, budget: report.budget, expenses: report.expenses.total },
-    ],
+    plan: report.plan,
+    months: report.months,
+    missingIncome: report.missingIncome ?? [],
+    isFiltered: !all,
+    categories,
     expenses,
-    ...budgetStatus(report.budget, report.expenses.total),
+    filteredSpent: expenses.reduce((s, e) => s + e.amount, 0),
+    ...poolStatus(pool, totalSpent),
   };
 }
 
@@ -93,22 +96,28 @@ export function spendingSegments(categories, colorMap, max = 5) {
   return segments.map((s) => ({ ...s, share: total > 0 ? (s.value / total) * 100 : 0 }));
 }
 
-/** Totales, diferencias mensuales y acumulado de la tabla histórica. */
+/**
+ * Filas calculadas de la tabla histórica: diferencia mensual entre lo
+ * disponible para gastos y lo gastado, su acumulado y los totales.
+ */
 export function computeHistoryTotals(table) {
-  const sum = (fn) => table.categories.reduce((s, c) => s + fn(c), 0);
-  const antesBudget = sum((c) => c.antesBudget);
-  const antesReal = sum((c) => c.antesReal);
-  const monthTotals = table.months.map((_, idx) => ({
-    budget: sum((c) => c.months[idx].budget),
-    real: sum((c) => c.months[idx].real),
-  }));
-  const totalBudget = sum((c) => c.totalBudget);
-  const totalReal = sum((c) => c.totalReal);
-  const mensualDiffs = [antesBudget - antesReal, ...monthTotals.map((m) => m.budget - m.real)];
+  const sum = (arr) => arr.reduce((s, v) => s + v, 0);
+  const diffs = table.months.map((_, i) => table.plan[i].spending - table.spent[i]);
   const acumulados = [];
-  mensualDiffs.reduce((acc, val, idx) => {
-    acumulados[idx] = acc + val;
-    return acumulados[idx];
+  diffs.reduce((acc, val, i) => {
+    acumulados[i] = acc + val;
+    return acumulados[i];
   }, 0);
-  return { antesBudget, antesReal, monthTotals, totalBudget, totalReal, mensualDiffs, acumulados };
+  return {
+    diffs,
+    acumulados,
+    totals: {
+      income: sum(table.plan.map((p) => p.income)),
+      invest: sum(table.plan.map((p) => p.invest)),
+      save: sum(table.plan.map((p) => p.save)),
+      spending: sum(table.plan.map((p) => p.spending)),
+      spent: sum(table.spent),
+      diff: sum(diffs),
+    },
+  };
 }

@@ -1,11 +1,12 @@
-import { createCategoryWithBudget, getAllCategories } from '../services/categoriaService.js';
+import { createCategory, getAllCategories } from '../services/categoriaService.js';
+import { sendError } from '../utils/errors.js';
 
 export async function createCategoria(req, res) {
   try {
-    const categoria = await createCategoryWithBudget(req.body);
+    const categoria = await createCategory(req.body);
     res.json(categoria);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    sendError(res, err);
   }
 }
 
@@ -14,6 +15,6 @@ export async function listCategorias(req, res) {
     const categorias = await getAllCategories();
     res.json(categorias);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendError(res, err);
   }
 }

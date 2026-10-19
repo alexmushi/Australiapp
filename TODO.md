@@ -6,7 +6,7 @@
 - [ ] Checar si mi método de divisas es correcto: Si en un futuro el AUD cuesta 1 MXN, no joderá mi historial?
 - [ ] CRUD de presupuestos
 - [ ] Poder ver un histórico de las tablas (al mostrar el tab de "restaurantes", mostrar gráficas de barras de todos los meses. Si quieres más detalles, dar clic en el mes para ver la de pie)
-- [ ] Checar bug: Registré un gasto el 1 de julio y me lo marcó como parte de junio
+- [x] Checar bug: Registré un gasto el 1 de julio y me lo marcó como parte de junio
 - [x] Página HTTPS
 - [x] Agregar vista de calendario en fecha de registro gasto
 - [x] Mostrar nombre de gasto en vez de "Gasto 1"

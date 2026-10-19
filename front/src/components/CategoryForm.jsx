@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 import CustomInput from './CustomInput.jsx';
 import CustomButton from './CustomButton.jsx';
 import Card from './ui/Card.jsx';
@@ -7,7 +8,7 @@ import { useToast } from './ui/Toast.jsx';
 import { createCategory } from '../services/api.js';
 
 /** Las categorías solo clasifican gastos; todas comparten el 50% para gastos. */
-export default function CategoryForm() {
+export default function CategoryForm({ onCreated }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState();
@@ -36,6 +37,7 @@ export default function CategoryForm() {
       setName('');
       setDescription('');
       setError(undefined);
+      onCreated?.();
     } catch (err) {
       console.error(err);
       setSubmitError(err?.serverMessage || err?.message || 'Error desconocido');
@@ -46,11 +48,11 @@ export default function CategoryForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className='mx-auto flex max-w-2xl flex-col gap-5'>
+    <form onSubmit={handleSubmit} noValidate className='flex flex-col gap-5'>
       {submitError && <Alert title='No se pudo crear la categoría'>{submitError}</Alert>}
 
       <Card
-        title='Categoría'
+        title='Nueva categoría'
         subtitle='Sirve para clasificar tus gastos. Todas salen del mismo 50% para gastos.'
       >
         <div className='flex flex-col gap-4'>
@@ -96,3 +98,5 @@ export default function CategoryForm() {
     </form>
   );
 }
+
+CategoryForm.propTypes = { onCreated: PropTypes.func };

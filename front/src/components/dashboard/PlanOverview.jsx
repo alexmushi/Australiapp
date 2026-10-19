@@ -34,7 +34,7 @@ Tile.propTypes = {
  * Tarjeta principal: ingreso del periodo, su reparto 30/20/50 y cuánto queda
  * del 50% para gastos.
  */
-export default function PlanOverview({ view, periodLabel, currency, singleMonth, onAddIncome }) {
+export default function PlanOverview({ view, periodLabel, currency, singleMonth, onAddIncome, progress }) {
   const fmt = (v) => formatCurrency(v, currency);
   const { plan, spent, percentage, remaining, over, isOver, missingIncome } = view;
   const hasIncome = plan.income > 0;
@@ -101,13 +101,37 @@ export default function PlanOverview({ view, periodLabel, currency, singleMonth,
       </div>
 
       <div className='mt-4'>
-        <BudgetBar percentage={percentage} isOver={isOver} size='lg' label='Dinero para gastos usado' />
+        <BudgetBar
+          percentage={percentage}
+          isOver={isOver}
+          size='lg'
+          label='Dinero para gastos usado'
+          marker={progress?.percentage}
+        />
         <div className='mt-2 flex justify-between text-xs font-medium text-ink-2'>
           <span className={isOver ? 'text-bad' : ''}>{percentage.toFixed(0)}% usado</span>
           <span>
             <span className='tabular-nums' data-testid='total-spent'>{fmt(spent)}</span> gastado
           </span>
         </div>
+        {progress && (
+          <p className='mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted' data-testid='month-progress'>
+            <span className='inline-flex items-center gap-1.5'>
+              <span aria-hidden className='inline-block h-3 w-0.5 rounded-full bg-ink' />
+              Día {progress.day} de {progress.days} ({Math.round(progress.percentage)}% del mes)
+            </span>
+            {!isOver && remaining > 0 && (
+              <span>
+                · Puedes gastar{' '}
+                <strong className='font-semibold tabular-nums text-ink'>{fmt(remaining / progress.daysLeft)}</strong> por día
+                el resto del mes
+              </span>
+            )}
+            {percentage > progress.percentage + 10 && !isOver && (
+              <span className='text-warn'>· Vas gastando más rápido que el mes</span>
+            )}
+          </p>
+        )}
       </div>
 
       <div className='mt-5 grid grid-cols-2 gap-2 border-t border-line pt-4 sm:grid-cols-4 sm:gap-3'>
@@ -151,4 +175,10 @@ PlanOverview.propTypes = {
   currency: PropTypes.string.isRequired,
   singleMonth: PropTypes.bool,
   onAddIncome: PropTypes.func,
+  progress: PropTypes.shape({
+    day: PropTypes.number,
+    days: PropTypes.number,
+    daysLeft: PropTypes.number,
+    percentage: PropTypes.number,
+  }),
 };

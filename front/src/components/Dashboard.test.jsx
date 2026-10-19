@@ -5,7 +5,14 @@ import Dashboard from './Dashboard.jsx';
 import { mockFetch, fail } from '../test/mockFetch.js';
 import { renderWithProviders, signIn } from '../test/render.jsx';
 
-vi.mock('react-chartjs-2', () => ({ Doughnut: () => <div data-testid='doughnut' /> }));
+vi.mock('react-chartjs-2', () => ({
+  Doughnut: () => <div data-testid='doughnut' />,
+  Bar: (props) => (
+    <button type='button' data-testid='bar-chart' onClick={() => props.options.onClick({}, [{ index: 0 }])}>
+      {props['aria-label']}
+    </button>
+  ),
+}));
 
 const CATEGORIES = [
   { id: 1, name: 'Renta' },
@@ -164,5 +171,33 @@ describe('Dashboard', () => {
     expect(await screen.findByText('No se pudo cargar el resumen')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Reintentar/ }));
     expect(await screen.findByTestId('remaining')).toHaveTextContent('$349.50');
+  });
+
+  it('muestra la marca del día y cuánto gastar por día en el mes actual', async () => {
+    setup();
+    await screen.findByTestId('remaining');
+    expect(screen.getByTestId('month-marker')).toBeInTheDocument();
+    expect(screen.getByTestId('month-progress')).toHaveTextContent(/Día \d+ de \d+/);
+    expect(screen.getByTestId('month-progress')).toHaveTextContent(/por día/);
+  });
+
+  it('no muestra la marca del día en otros periodos', async () => {
+    const { user } = setup();
+    await screen.findByTestId('remaining');
+    await user.click(screen.getByRole('radio', { name: 'Todo' }));
+    await screen.findByTestId('remaining');
+    expect(screen.queryByTestId('month-marker')).not.toBeInTheDocument();
+  });
+
+  it('la gráfica mensual sigue el filtro y abre el mes al hacer clic', async () => {
+    const { api, user } = setup();
+    const chart = await screen.findByTestId('bar-chart');
+    expect(chart).toHaveTextContent('Gasto por mes: JUL 25 $100.00, AGO 25 $1,650.50');
+    await user.click(screen.getByRole('button', { name: /Categorías:/ }));
+    await user.click(screen.getByRole('checkbox', { name: 'Comida' }));
+    expect(screen.getByTestId('bar-chart')).toHaveTextContent('Gasto por mes · Comida: JUL 25 $0.00, AGO 25 $650.50');
+    await user.click(screen.getByTestId('bar-chart'));
+    await waitFor(() => expect(api.calls.some((c) => c.url.includes('range=custom&month=2025-07'))).toBe(true));
+    expect(screen.getByRole('radio', { name: 'Elegir mes' })).toBeChecked();
   });
 });

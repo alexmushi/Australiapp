@@ -10,9 +10,30 @@ import { useToast } from './ui/Toast.jsx';
 import useCurrencies from '../hooks/useCurrencies.js';
 import useCategories from '../hooks/useCategories.js';
 import { createExpense } from '../services/api.js';
-import { todayISO } from '../utils/date.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import ExpenseBudgetHint from './ExpenseBudgetHint.jsx';
+import { isValidISODate, todayISO } from '../utils/date.js';
 import { formatCurrency, parseAmount, sanitizeAmountInput, splitShared } from '../utils/money.js';
 import { hasErrors, validateExpense } from '../utils/validation.js';
+
+// Última categoría y divisa usadas, para no elegirlas cada vez.
+const LAST_KEY = 'expense_last_selection';
+
+function readLast() {
+  try {
+    return JSON.parse(localStorage.getItem(LAST_KEY)) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLast(patch) {
+  try {
+    localStorage.setItem(LAST_KEY, JSON.stringify({ ...readLast(), ...patch }));
+  } catch {
+    // almacenamiento no disponible
+  }
+}
 
 const recurrenceOptions = [
   { value: 'monthly', label: 'Mensual' },
@@ -23,6 +44,8 @@ export default function ExpenseForm() {
   const { currencies, error: currenciesError } = useCurrencies();
   const { categories, error: categoriesError, loading: categoriesLoading } = useCategories();
   const notify = useToast();
+  const { user } = useAuth();
+  const [statusKey, setStatusKey] = useState(0);
   const amountRef = useRef(null);
   const submittingRef = useRef(false);
 
@@ -41,13 +64,16 @@ export default function ExpenseForm() {
 
   useEffect(() => {
     if (!currency && currencies.length > 0) {
-      setCurrency(currencies[0]);
+      const last = readLast().currency;
+      setCurrency(currencies.includes(last) ? last : currencies[0]);
     }
   }, [currencies, currency]);
 
   useEffect(() => {
     if (!category && categories.length > 0) {
-      setCategory(String(categories[0].id));
+      const last = readLast().category;
+      const known = categories.some((c) => String(c.id) === last);
+      setCategory(known ? last : String(categories[0].id));
     }
   }, [categories, category]);
 
@@ -93,6 +119,7 @@ export default function ExpenseForm() {
       setDescription('');
       setEndDate('');
       setErrors({});
+      setStatusKey((k) => k + 1);
       amountRef.current?.querySelector('input')?.focus();
     } catch (err) {
       console.error(err);
@@ -154,6 +181,7 @@ export default function ExpenseForm() {
               value={currency}
               onChange={(e) => {
                 setCurrency(e.target.value);
+                saveLast({ currency: e.target.value });
                 clearError('currency');
               }}
               options={currencies}
@@ -170,6 +198,7 @@ export default function ExpenseForm() {
             value={category}
             onChange={(e) => {
               setCategory(e.target.value);
+              saveLast({ category: e.target.value });
               clearError('category');
             }}
             options={categories.map((c) => ({ value: String(c.id), label: c.name }))}
@@ -208,6 +237,18 @@ export default function ExpenseForm() {
           </div>
         </div>
       </Card>
+
+      {isValidISODate(date) && user && (
+        <ExpenseBudgetHint
+          month={date.slice(0, 7)}
+          amount={amountToSave ?? undefined}
+          currency={currency}
+          displayCurrency={user.default_currency_code || 'MXN'}
+          categoryId={category}
+          categoryName={categories.find((c) => String(c.id) === category)?.name}
+          refreshKey={statusKey}
+        />
+      )}
 
       <Card title='Opciones' bodyClassName='p-4 sm:p-5 flex flex-col divide-y divide-line'>
         <div className='pb-3'>

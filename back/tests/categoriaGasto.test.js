@@ -7,7 +7,9 @@ vi.mock('../services/divisaService.js', () => ({
   getDivisaRates: vi.fn(async () => ({ MXN: 1, AUD: 0.08 })),
 }));
 
-const { createCategory, getAllCategories } = await import('../services/categoriaService.js');
+const { createCategory, deleteCategory, getAllCategories, updateCategory } = await import(
+  '../services/categoriaService.js'
+);
 const { createGasto } = await import('../services/gastoService.js');
 
 beforeEach(() => {
@@ -25,8 +27,36 @@ describe('createCategory', () => {
     await expect(createCategory({ name: 'x'.repeat(51) })).rejects.toMatchObject({ status: 400 });
     await expect(createCategory({ name: 'comida' })).rejects.toThrow('Ya existe');
   });
-  it('lista id y nombre', async () => {
-    expect(await getAllCategories()).toEqual([{ id: 1, name: 'Comida' }]);
+  it('lista con descripción y número de gastos', async () => {
+    db.gastos = [{ id: 1, category_id: 1 }, { id: 2, category_id: 1 }];
+    expect(await getAllCategories()).toEqual([{ id: 1, name: 'Comida', description: null, expense_count: 2 }]);
+  });
+});
+
+describe('updateCategory / deleteCategory', () => {
+  it('renombra y cambia la descripción', async () => {
+    expect(await updateCategory('1', { name: ' Súper ', description: 'mercado' })).toEqual({
+      id: 1,
+      name: 'Súper',
+      description: 'mercado',
+    });
+    expect(db.categorias[0]).toMatchObject({ name: 'Súper', description: 'mercado' });
+  });
+  it('permite conservar el mismo nombre pero no duplicar otro', async () => {
+    db.categorias.push({ id: 2, name: 'Renta' });
+    await expect(updateCategory(1, { name: 'comida' })).resolves.toMatchObject({ name: 'comida' });
+    await expect(updateCategory(1, { name: 'RENTA' })).rejects.toThrow('Ya existe');
+    await expect(updateCategory(9, { name: 'x' })).rejects.toMatchObject({ status: 404 });
+    await expect(updateCategory(1, { name: '' })).rejects.toMatchObject({ status: 400 });
+  });
+  it('borra solo categorías sin gastos', async () => {
+    db.gastos = [{ id: 1, category_id: 1 }];
+    await expect(deleteCategory(1)).rejects.toMatchObject({ status: 409 });
+    expect(db.categorias).toHaveLength(1);
+    db.gastos = [];
+    await expect(deleteCategory(1)).resolves.toEqual({ deleted: true });
+    expect(db.categorias).toHaveLength(0);
+    await expect(deleteCategory(1)).rejects.toMatchObject({ status: 404 });
   });
 });
 

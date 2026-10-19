@@ -10,7 +10,8 @@ export function renderWithProviders(ui) {
   );
 }
 
-export const USER = { id: 1, username: 'alex', default_currency_code: 'MXN' };
+export const USER = { id: 1, username: 'alex', default_currency_code: 'MXN', role: 'owner', token: 'tok-owner' };
+export const REVIEWER = { id: 2, username: 'mama', default_currency_code: 'MXN', role: 'reviewer', token: 'tok-reviewer' };
 
 export function signIn(user = USER) {
   localStorage.setItem('auth_user', JSON.stringify(user));

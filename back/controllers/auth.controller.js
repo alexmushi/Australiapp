@@ -1,4 +1,6 @@
 import { loginUser /*, registerUser */ } from '../services/authService.js';
+import { getRole } from '../services/usuarioService.js';
+import { signToken } from '../utils/auth.js';
 
 export function ping(req, res) {
   res.json({ message: 'pong' });
@@ -17,10 +19,11 @@ export function ping(req, res) {
 
 export async function login(req, res) {
   try {
-    const user = await loginUser(req.body);
+    const user = await loginUser(req.body ?? {});
     delete user.password_hash;
-    res.json(user);
+    const role = await getRole(user.id);
+    res.json({ ...user, role, token: signToken(user.id) });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(401).json({ error: err.message });
   }
 }

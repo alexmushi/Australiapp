@@ -12,6 +12,9 @@ import { Usuario } from '../models/usuario.model.js';
 // }
 
 export async function loginUser({ username, password }) {
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+    throw new Error('Invalid credentials');
+  }
   const user = await Usuario.findOne({ where: { username } });
   if (!user) {
     throw new Error('Invalid credentials');

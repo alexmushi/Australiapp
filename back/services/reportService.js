@@ -2,9 +2,10 @@ import { Op } from 'sequelize';
 import { Categoria } from '../models/categoria.model.js';
 import { Gasto } from '../models/gasto.model.js';
 import { Ingreso } from '../models/ingreso.model.js';
-import { getDivisaRates } from './divisaService.js';
+import { getRateBook } from './divisaService.js';
 import { badRequest } from '../utils/errors.js';
-import { convert, splitIncome } from '../utils/money.js';
+import { splitIncome } from '../utils/money.js';
+import { isoDay } from '../utils/rates.js';
 import {
   currentMonth,
   fromIndex,
@@ -26,12 +27,18 @@ const addPlans = (a, b) => ({
   spending: a.spending + b.spending,
 });
 
-/** Reparto 30/20/50 de cada mes, convertido a la divisa pedida. */
-function planByMonth(incomes, currency, rates) {
+const firstDayISO = (year, month) => `${year}-${String(month).padStart(2, '0')}-01`;
+
+/**
+ * Reparto 30/20/50 de cada mes, convertido a la divisa pedida con el tipo de
+ * cambio del primer día del mes que financia.
+ */
+function planByMonth(incomes, currency, book) {
   const map = new Map();
   for (const inc of incomes) {
     const split = splitIncome(inc.amount);
-    const conv = (v) => convert(v, inc.currency_code, currency, rates);
+    const day = firstDayISO(inc.period_year, inc.period_month);
+    const conv = (v) => book.convert(v, inc.currency_code, currency, day);
     map.set(monthIndex({ year: inc.period_year, month: inc.period_month }), {
       income: conv(split.income),
       invest: conv(split.invest),
@@ -99,12 +106,13 @@ export async function getSummary(range = 'month', currency = 'MXN', monthStr, no
     });
   }
 
-  const rates = await getDivisaRates();
+  const book = await getRateBook();
+  if (!book.has(currency)) throw badRequest('Divisa inválida');
   const monthSet = new Set(months.map(monthIndex));
   const plans = planByMonth(
     incomesAll.filter((i) => monthSet.has(monthIndex({ year: i.period_year, month: i.period_month }))),
     currency,
-    rates
+    book
   );
   const plan = [...plans.values()].reduce(addPlans, EMPTY_PLAN);
   const missingIncome = months.filter((m) => !plans.has(monthIndex(m)));
@@ -112,7 +120,8 @@ export async function getSummary(range = 'month', currency = 'MXN', monthStr, no
   const expenses = expensesAll.map((e) => ({
     id: e.id,
     category_id: e.category_id,
-    amount: convert(e.amount, e.currency_code, currency, rates),
+    // Cada gasto se convierte con el tipo de cambio de su fecha.
+    amount: book.convert(e.amount, e.currency_code, currency, isoDay(e.date)),
     date: e.date,
     description: e.description,
   }));
@@ -142,7 +151,8 @@ export async function getHistoricalTable(currency = 'MXN', now = new Date()) {
     where: { date: { [Op.lt]: monthEndExclusive(current) } },
     attributes: ['amount', 'currency_code', 'category_id', 'date'],
   });
-  const rates = await getDivisaRates();
+  const book = await getRateBook();
+  if (!book.has(currency)) throw badRequest('Divisa inválida');
 
   const incomes = incomesAll.filter(
     (i) => monthIndex({ year: i.period_year, month: i.period_month }) <= monthIndex(current)
@@ -155,14 +165,14 @@ export async function getHistoricalTable(currency = 'MXN', now = new Date()) {
   const months = monthsBetween(fromIndex(Math.min(...indices)), current);
   const first = monthIndex(months[0]);
 
-  const plans = planByMonth(incomes, currency, rates);
+  const plans = planByMonth(incomes, currency, book);
   const planRows = months.map((m) => plans.get(monthIndex(m)) ?? { ...EMPTY_PLAN, missing: true });
 
   const rows = new Map(categories.map((c) => [c.id, months.map(() => 0)]));
   const spentRow = months.map(() => 0);
   for (const e of expensesAll) {
     const idx = monthIndex(monthOfDate(e.date)) - first;
-    const amount = convert(e.amount, e.currency_code, currency, rates);
+    const amount = book.convert(e.amount, e.currency_code, currency, isoDay(e.date));
     if (!rows.has(e.category_id)) rows.set(e.category_id, months.map(() => 0));
     rows.get(e.category_id)[idx] += amount;
     spentRow[idx] += amount;
@@ -176,5 +186,36 @@ export async function getHistoricalTable(currency = 'MXN', now = new Date()) {
       const values = rows.get(c.id);
       return { id: c.id, name: c.name, months: values, total: values.reduce((s, v) => s + v, 0) };
     }),
+  };
+}
+
+/**
+ * Estado de un mes y de los dos anteriores: dinero para gastos, gastado y si
+ * se excedió. Lo usan el aviso al registrar gastos y las notificaciones.
+ */
+export async function getMonthStatus(monthStr, currency = 'MXN', now = new Date()) {
+  const target = monthStr ? parseMonthParam(monthStr) : currentMonth(now);
+  if (!target) throw badRequest('Mes inválido');
+  const toStr = (m) => `${m.year}-${String(m.month).padStart(2, '0')}`;
+  const periods = [-2, -1, 0].map((d) => fromIndex(monthIndex(target) + d));
+  const summaries = [];
+  for (const p of periods) summaries.push(await getSummary('custom', currency, toStr(p), now));
+
+  const status = (p, s) => ({
+    year: p.year,
+    month: p.month,
+    hasIncome: s.missingIncome.length === 0,
+    income: s.plan.income,
+    spending: s.plan.spending,
+    spent: s.totalExpenses,
+    remaining: s.plan.spending - s.totalExpenses,
+    over: s.missingIncome.length === 0 && s.totalExpenses - s.plan.spending > 0.004,
+    byCategory: Object.fromEntries(s.categories.filter((c) => c.expenses > 0).map((c) => [c.id, c.expenses])),
+  });
+  const [twoAgo, oneAgo, current] = periods.map((p, i) => status(p, summaries[i]));
+  return {
+    ...current,
+    previous: [twoAgo, oneAgo],
+    overspentStreak: twoAgo.over && oneAgo.over,
   };
 }

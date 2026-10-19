@@ -1,19 +1,40 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, act } from '@testing-library/react';
+import { screen, waitFor, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ExpenseForm from './ExpenseForm.jsx';
 import { mockFetch, fail } from '../test/mockFetch.js';
-import { renderWithProviders } from '../test/render.jsx';
+import { renderWithProviders, signIn } from '../test/render.jsx';
 
 const CATEGORIES = [
   { id: 4, name: 'Comida' },
   { id: 9, name: 'Renta' },
 ];
 
-function setup(postHandler = (req) => ({ id: 1, ...req.body })) {
+const STATUS = {
+  year: 2025,
+  month: 10,
+  hasIncome: true,
+  spending: 1000,
+  spent: 900,
+  remaining: 100,
+  over: false,
+  previous: [
+    { year: 2025, month: 8, over: false, byCategory: {} },
+    { year: 2025, month: 9, over: false, byCategory: {} },
+  ],
+  overspentStreak: false,
+};
+
+function setup(postHandler = (req) => ({ id: 1, ...req.body }), status = STATUS) {
+  signIn();
   const api = mockFetch({
     'GET /api/divisas': ['AUD', 'MXN'],
+    'GET /api/divisas/all': [
+      { code: 'AUD', value: '0.0800' },
+      { code: 'MXN', value: '1.0000' },
+    ],
     'GET /api/categorias': CATEGORIES,
+    'GET /api/reports/month-status': status,
     'POST /api/gastos': postHandler,
   });
   const user = userEvent.setup();
@@ -145,5 +166,55 @@ describe('ExpenseForm', () => {
     expect(await screen.findByText('No se pudo registrar el gasto')).toBeInTheDocument();
     expect(screen.getByText('Divisa inválida')).toBeInTheDocument();
     expect(screen.getByLabelText('Monto')).toHaveValue('20');
+  });
+
+  it('recuerda la última categoría y divisa', async () => {
+    const { user } = setup();
+    await ready();
+    await user.selectOptions(screen.getByLabelText('Categoría'), '9');
+    await user.selectOptions(screen.getByLabelText('Divisa'), 'MXN');
+    cleanup();
+    setup();
+    await waitFor(() => expect(screen.getByLabelText('Categoría')).toHaveValue('9'));
+    expect(screen.getByLabelText('Divisa')).toHaveValue('MXN');
+  });
+
+  it('ignora una categoría recordada que ya no existe', async () => {
+    localStorage.setItem('expense_last_selection', JSON.stringify({ category: '77', currency: 'EUR' }));
+    setup();
+    await ready();
+  });
+
+  it('muestra lo que queda del mes y cómo queda después del gasto', async () => {
+    const { user, api } = setup();
+    await ready();
+    expect(await screen.findByText(/Te quedan/)).toHaveTextContent('Te quedan $100.00 para gastar en octubre 2025.');
+    expect(api.calls.some((c) => c.url === '/api/reports/month-status?currency=MXN&month=2025-10')).toBe(true);
+    // 5 AUD = 62.50 MXN
+    await user.type(screen.getByLabelText('Monto'), '5');
+    expect(screen.getByTestId('after-expense')).toHaveTextContent('Después de este gasto: $37.50.');
+    await user.clear(screen.getByLabelText('Monto'));
+    await user.type(screen.getByLabelText('Monto'), '10');
+    expect(screen.getByTestId('after-expense')).toHaveTextContent('Con este gasto quedarías $25.00 por encima del 50%.');
+  });
+
+  it('avisa si los dos meses anteriores se excedió, con lo gastado en la categoría', async () => {
+    setup(undefined, {
+      ...STATUS,
+      overspentStreak: true,
+      previous: [
+        { year: 2025, month: 8, over: true, byCategory: { 4: 300 } },
+        { year: 2025, month: 9, over: true, byCategory: { 4: 200.5, 9: 1000 } },
+      ],
+    });
+    await ready();
+    expect(await screen.findByText('Llevas dos meses seguidos pasándote del 50%')).toBeInTheDocument();
+    expect(screen.getByText(/agosto 2025 y septiembre 2025/)).toHaveTextContent('En esos meses Comida sumó $500.50.');
+  });
+
+  it('avisa si el mes no tiene ingreso registrado', async () => {
+    setup(undefined, { ...STATUS, hasIncome: false, spending: 0, remaining: -900 });
+    await ready();
+    expect(await screen.findByText(/Aún no registras el ingreso de octubre 2025/)).toBeInTheDocument();
   });
 });

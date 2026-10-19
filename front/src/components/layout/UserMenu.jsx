@@ -1,11 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { LuChevronDown, LuLogOut } from 'react-icons/lu';
+import { LuChevronDown, LuLogOut, LuUsers } from 'react-icons/lu';
 import CustomSelect from '../CustomSelect.jsx';
 import useCurrencies from '../../hooks/useCurrencies.js';
 import { useToast } from '../ui/Toast.jsx';
 
-export default function UserMenu({ username, currency, onCurrencyChange, onLogout }) {
+export default function UserMenu({ username, currency, onCurrencyChange, onLogout, isReviewer = false, onManageReviewers }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const { currencies } = useCurrencies();
@@ -70,6 +70,11 @@ export default function UserMenu({ username, currency, onCurrencyChange, onLogou
             <div className='mb-4'>
               <p className='text-xs text-muted'>Sesión iniciada como</p>
               <p className='truncate font-semibold text-ink'>{username}</p>
+              {isReviewer && (
+                <span className='mt-1 inline-block rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-2'>
+                  Revisor · solo lectura
+                </span>
+              )}
             </div>
           )}
           <CustomSelect
@@ -83,6 +88,19 @@ export default function UserMenu({ username, currency, onCurrencyChange, onLogou
             Divisa de visualización
           </CustomSelect>
           <div className='my-4 h-px bg-line' />
+          {onManageReviewers && (
+            <button
+              type='button'
+              onClick={() => {
+                setOpen(false);
+                onManageReviewers();
+              }}
+              className='mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-ink-2 hover:bg-surface-2 hover:text-ink'
+            >
+              <LuUsers aria-hidden />
+              Revisores
+            </button>
+          )}
           <button
             type='button'
             onClick={onLogout}
@@ -102,4 +120,6 @@ UserMenu.propTypes = {
   currency: PropTypes.string.isRequired,
   onCurrencyChange: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
+  isReviewer: PropTypes.bool,
+  onManageReviewers: PropTypes.func,
 };

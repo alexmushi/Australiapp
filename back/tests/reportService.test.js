@@ -5,11 +5,14 @@ vi.mock('../models/categoria.model.js', async () => ({ Categoria: (await import(
 vi.mock('../models/gasto.model.js', async () => ({ Gasto: (await import('./mockDb.js')).model('gastos') }));
 vi.mock('../models/ingreso.model.js', async () => ({ Ingreso: (await import('./mockDb.js')).model('ingresos') }));
 // Unidades de cada divisa por 1 MXN.
-vi.mock('../services/divisaService.js', () => ({
-  getDivisaRates: vi.fn(async () => ({ MXN: 1, AUD: 0.08 })),
-}));
+vi.mock('../services/divisaService.js', async () => {
+  const { makeRateBook } = await import('../utils/rates.js');
+  const { db: mdb } = await import('./mockDb.js');
+  return { getRateBook: vi.fn(async () => makeRateBook({ MXN: 1, AUD: 0.08 }, mdb.historial)) };
+});
 
-const { getSummary, getHistoricalTable } = await import('../services/reportService.js');
+const { getSummary, getHistoricalTable, getMonthStatus } = await import('../services/reportService.js');
+const { getNotifications } = await import('../services/notificationService.js');
 
 const d = (iso) => new Date(`${iso}T00:00:00.000Z`);
 // 15 ago 2025 en Sídney
@@ -117,6 +120,33 @@ describe('getSummary', () => {
     expect(s.plan.income).toBeCloseTo(45000);
   });
 
+  it('convierte cada gasto e ingreso con el tipo de cambio de su fecha', async () => {
+    // El AUD se abarata: 0.08 AUD/MXN hasta el 9 ago (12.5 MXN por AUD), 0.10 desde el 10 (10 MXN)
+    db.historial = [
+      { code: 'AUD', date: '2025-07-01', value: '0.0800' },
+      { code: 'AUD', date: '2025-08-10', value: '0.1000' },
+    ];
+    const s = await getSummary('month', 'MXN', undefined, NOW);
+    // Gasto de 10 AUD del 10 de agosto -> 100 MXN (no 125)
+    expect(s.expenses.find((e) => e.id === 4).amount).toBeCloseTo(100);
+    // Ingreso de agosto (2000 AUD) con la tasa del 1 de agosto -> 25,000 MXN
+    expect(s.plan.income).toBeCloseTo(25000);
+    // Un cambio de tasa posterior no altera el historial
+    db.historial.push({ code: 'AUD', date: '2025-08-14', value: '1.0000' });
+    const again = await getSummary('custom', 'MXN', '2025-07', NOW);
+    expect(again.plan.income).toBeCloseTo(20000);
+  });
+
+  it('usa la primera tasa registrada para fechas anteriores al historial', async () => {
+    db.historial = [{ code: 'AUD', date: '2025-08-12', value: '0.1000' }];
+    const s = await getSummary('month', 'MXN', undefined, NOW);
+    expect(s.expenses.find((e) => e.id === 4).amount).toBeCloseTo(100);
+  });
+
+  it('rechaza divisas desconocidas', async () => {
+    await expect(getSummary('month', 'EUR', undefined, NOW)).rejects.toMatchObject({ status: 400 });
+  });
+
   it('rechaza rangos y meses inválidos', async () => {
     await expect(getSummary('week', 'MXN', undefined, NOW)).rejects.toMatchObject({ status: 400 });
     await expect(getSummary('custom', 'MXN', '2025-13', NOW)).rejects.toMatchObject({ status: 400 });
@@ -147,5 +177,72 @@ describe('getHistoricalTable', () => {
     const t = await getHistoricalTable('MXN', NOW);
     expect(t.months).toEqual([{ year: 2025, month: 8 }]);
     expect(t.spent).toEqual([0]);
+  });
+});
+
+describe('getMonthStatus', () => {
+  it('devuelve el mes y los dos anteriores', async () => {
+    const st = await getMonthStatus('2025-08', 'MXN', NOW);
+    expect(st).toMatchObject({ year: 2025, month: 8, hasIncome: true, over: false });
+    expect(st.spending).toBeCloseTo(12500);
+    expect(st.spent).toBeCloseTo(1175);
+    expect(st.previous.map((p) => [p.month, p.hasIncome, p.over])).toEqual([
+      [6, false, false],
+      [7, true, false],
+    ]);
+    expect(st.byCategory).toEqual({ 1: 1000, 2: expect.closeTo(175, 6) });
+    expect(st.overspentStreak).toBe(false);
+  });
+
+  it('detecta dos meses seguidos por encima del 50%', async () => {
+    db.ingresos.push({ id: 3, period_year: 2025, period_month: 6, amount: '100.00', currency_code: 'MXN' });
+    db.gastos.push({ id: 7, amount: '20000.00', currency_code: 'MXN', category_id: 1, date: d('2025-07-15'), description: 'x' });
+    const st = await getMonthStatus('2025-08', 'MXN', NOW);
+    expect(st.previous.map((p) => p.over)).toEqual([true, true]);
+    expect(st.overspentStreak).toBe(true);
+  });
+
+  it('un mes sin ingreso no cuenta como excedido', async () => {
+    const st = await getMonthStatus('2025-07', 'MXN', NOW);
+    expect(st.previous[1]).toMatchObject({ month: 6, hasIncome: false, over: false });
+  });
+});
+
+describe('getNotifications', () => {
+  it('sin avisos cuando todo va bien', async () => {
+    expect(await getNotifications('MXN', NOW)).toEqual([]);
+  });
+
+  it('avisa si falta el ingreso del mes', async () => {
+    const n = await getNotifications('MXN', new Date('2025-09-02T02:00:00Z'));
+    expect(n).toEqual([
+      expect.objectContaining({ id: 'missing-income-2025-09', severity: 'warning', action: 'income' }),
+    ]);
+    expect(n[0].message).toContain('agosto 2025');
+  });
+
+  it('avisa al pasar el 80% y al exceder el 50%', async () => {
+    db.gastos.push({ id: 7, amount: '9000.00', currency_code: 'MXN', category_id: 1, date: d('2025-08-05'), description: 'x' });
+    let n = await getNotifications('MXN', NOW);
+    expect(n.map((x) => x.id)).toEqual(['pool-80-2025-08']);
+    // 10,175 de 12,500 = 81.4% -> mismo redondeo que el resumen
+    expect(n[0].title).toBe('Llevas 81% del dinero para gastos');
+    db.gastos.push({ id: 8, amount: '5000.00', currency_code: 'MXN', category_id: 1, date: d('2025-08-06'), description: 'y' });
+    n = await getNotifications('MXN', NOW);
+    expect(n.map((x) => [x.id, x.severity])).toEqual([['over-2025-08', 'critical']]);
+  });
+
+  it('avisa si se gasta más rápido de lo que avanza el mes', async () => {
+    // 15 ago: ~48% del mes; gastar 70% del dinero dispara el aviso
+    db.gastos.push({ id: 7, amount: '7600.00', currency_code: 'MXN', category_id: 1, date: d('2025-08-05'), description: 'x' });
+    const n = await getNotifications('MXN', NOW);
+    expect(n.map((x) => x.id)).toEqual(['pace-2025-08']);
+  });
+
+  it('avisa de dos meses seguidos excedidos', async () => {
+    db.ingresos.push({ id: 3, period_year: 2025, period_month: 6, amount: '100.00', currency_code: 'MXN' });
+    db.gastos.push({ id: 7, amount: '20000.00', currency_code: 'MXN', category_id: 1, date: d('2025-07-15'), description: 'x' });
+    const n = await getNotifications('MXN', NOW);
+    expect(n.map((x) => x.id)).toContain('streak-2025-08');
   });
 });

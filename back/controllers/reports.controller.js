@@ -1,4 +1,4 @@
-import { getSummary, getHistoricalTable } from '../services/reportService.js';
+import { getSummary, getHistoricalTable, getMonthStatus } from '../services/reportService.js';
 import { sendError } from '../utils/errors.js';
 
 export async function summaryController(req, res) {
@@ -16,6 +16,15 @@ export async function summaryTableController(req, res) {
   try {
     const data = await getHistoricalTable(currency);
     res.json(data);
+  } catch (err) {
+    sendError(res, err);
+  }
+}
+
+export async function monthStatusController(req, res) {
+  const { currency = 'MXN', month } = req.query;
+  try {
+    res.json(await getMonthStatus(month, currency));
   } catch (err) {
     sendError(res, err);
   }

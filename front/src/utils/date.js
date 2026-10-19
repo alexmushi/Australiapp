@@ -57,3 +57,10 @@ export function shiftMonth(monthISO, delta) {
 
 /** { year, month } -> '2025-07' */
 export const toMonthISO = ({ year, month }) => `${year}-${String(month).padStart(2, '0')}`;
+
+/** Día actual y días del mes en curso (hora de Sídney). */
+export function monthProgress(timeZone = APP_TIME_ZONE, now = new Date()) {
+  const [y, m, d] = todayISO(timeZone, now).split('-').map(Number);
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return { day: d, days, percentage: (d / days) * 100, daysLeft: days - d + 1 };
+}

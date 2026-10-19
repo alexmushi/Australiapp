@@ -5,7 +5,7 @@ import useReport from '../hooks/useReport.js';
 import useCategories from '../hooks/useCategories.js';
 import useSummaryTable from '../hooks/useSummaryTable.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { currentMonthISO, monthLabel } from '../utils/date.js';
+import { currentMonthISO, monthLabel, monthProgress } from '../utils/date.js';
 import { buildSummaryView, categoryColorMap, spendingSegments } from '../utils/dashboard.js';
 import SegmentedControl from './ui/SegmentedControl.jsx';
 import MonthStepper from './ui/MonthStepper.jsx';
@@ -17,6 +17,8 @@ import CategoryBreakdown from './dashboard/CategoryBreakdown.jsx';
 import SpendingChart from './dashboard/SpendingChart.jsx';
 import ExpenseList from './dashboard/ExpenseList.jsx';
 import HistoryTable from './dashboard/HistoryTable.jsx';
+import MonthlyChart from './dashboard/MonthlyChart.jsx';
+import { monthlySeries } from '../utils/monthlySeries.js';
 
 const ranges = [
   { value: 'month', label: 'Este mes' },
@@ -96,6 +98,8 @@ export default function Dashboard({ onAddExpense, onAddIncome }) {
           ? 'Todo el historial'
           : monthLabel(month);
 
+  const isCurrentMonth = range === 'month' || (range === 'custom' && month === currentMonthISO());
+
   let body;
   if (report.error) {
     body = (
@@ -123,6 +127,7 @@ export default function Dashboard({ onAddExpense, onAddIncome }) {
           currency={currency}
           singleMonth={range === 'month' || range === 'custom'}
           onAddIncome={onAddIncome}
+          progress={isCurrentMonth ? monthProgress() : undefined}
         />
         <div className='grid items-start gap-5 lg:grid-cols-5'>
           <div className='flex flex-col gap-5 lg:col-span-3'>
@@ -182,6 +187,27 @@ export default function Dashboard({ onAddExpense, onAddIncome }) {
               Reintentar
             </CustomButton>
           }
+        />
+      )}
+      {table.data && table.data.months.length > 1 && (
+        <MonthlyChart
+          series={monthlySeries(table.data, selectedCategories)}
+          title={
+            selectedCategories.includes('all')
+              ? 'Gasto por mes'
+              : `Gasto por mes · ${
+                  selectedCategories.length === 1
+                    ? categories.find((c) => String(c.id) === selectedCategories[0])?.name ?? 'categoría'
+                    : `${selectedCategories.length} categorías`
+                }`
+          }
+          currency={currency}
+          selectedMonth={range === 'custom' ? month : range === 'month' ? currentMonthISO() : undefined}
+          onSelectMonth={(m) => {
+            setRange('custom');
+            setMonth(m);
+            window.scrollTo?.({ top: 0, behavior: 'smooth' });
+          }}
         />
       )}
       {table.data && <HistoryTable table={table.data} currency={currency} />}

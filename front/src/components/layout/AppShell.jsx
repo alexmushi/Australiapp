@@ -4,7 +4,7 @@ import Logo from '../ui/Logo.jsx';
 /**
  * Estructura de la app: barra lateral en escritorio y barra inferior en móvil.
  */
-export default function AppShell({ items, current, onNavigate, title, subtitle, userMenu, children }) {
+export default function AppShell({ items, current, onNavigate, title, subtitle, actions, userMenu, children }) {
   return (
     <div className='min-h-dvh bg-bg md:pl-64'>
       <aside className='fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface md:flex'>
@@ -41,6 +41,7 @@ export default function AppShell({ items, current, onNavigate, title, subtitle, 
             <h1 className='truncate text-lg font-semibold tracking-tight text-ink'>{title}</h1>
             {subtitle && <p className='hidden truncate text-xs text-muted sm:block'>{subtitle}</p>}
           </div>
+          {actions}
           {userMenu}
         </div>
       </header>
@@ -49,6 +50,7 @@ export default function AppShell({ items, current, onNavigate, title, subtitle, 
         {children}
       </main>
 
+      {items.length > 1 && (
       <nav
         aria-label='Principal móvil'
         className='fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden'
@@ -79,6 +81,7 @@ export default function AppShell({ items, current, onNavigate, title, subtitle, 
           })}
         </div>
       </nav>
+      )}
     </div>
   );
 }
@@ -96,6 +99,7 @@ AppShell.propTypes = {
   onNavigate: PropTypes.func.isRequired,
   title: PropTypes.node,
   subtitle: PropTypes.node,
+  actions: PropTypes.node,
   userMenu: PropTypes.node,
   children: PropTypes.node,
 };

@@ -16,19 +16,33 @@ export class ApiError extends Error {
   }
 }
 
+// Sesión actual: el token se manda en cada petición; un 401 cierra la sesión.
+let authToken = null;
+let onUnauthorized = null;
+
+export function setAuthToken(token) {
+  authToken = token || null;
+}
+
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler;
+}
+
 async function request(url, fallbackMessage, { method = 'GET', body } = {}) {
+  const headers = {};
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
   let res;
   try {
     res = await fetch(url, {
       method,
-      ...(body !== undefined && {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }),
+      ...(Object.keys(headers).length && { headers }),
+      ...(body !== undefined && { body: JSON.stringify(body) }),
     });
   } catch {
     throw new ApiError('No hay conexión con el servidor', 0);
   }
+  if (res.status === 401 && authToken && onUnauthorized) onUnauthorized();
   if (!res.ok) {
     let serverMessage;
     try {
@@ -49,8 +63,17 @@ export function loginUser(data) {
   return request(`${API_URL}/login`, 'Invalid credentials', { method: 'POST', body: data });
 }
 
+export function fetchReviewers() {
+  return request(REVIEWER_URL, 'Failed to fetch reviewers');
+}
+
+/** Crea una cuenta de revisor (solo lectura). */
 export function addReviewer(data) {
   return request(REVIEWER_URL, 'Failed to add reviewer', { method: 'POST', body: data });
+}
+
+export function removeReviewer(id) {
+  return request(`${REVIEWER_URL}/${Number(id)}`, 'Failed to remove reviewer', { method: 'DELETE' });
 }
 
 export function createCategory(data) {
@@ -59,6 +82,14 @@ export function createCategory(data) {
 
 export function fetchCategories() {
   return request(CATEGORY_URL, 'Failed to fetch categories');
+}
+
+export function updateCategory(id, data) {
+  return request(`${CATEGORY_URL}/${Number(id)}`, 'Failed to update category', { method: 'PUT', body: data });
+}
+
+export function deleteCategory(id) {
+  return request(`${CATEGORY_URL}/${Number(id)}`, 'Failed to delete category', { method: 'DELETE' });
 }
 
 export function updateUserCurrency(userId, code) {
@@ -90,6 +121,18 @@ export function fetchReport(range = 'month', currency = 'MXN', month) {
 export function fetchSummaryTable(currency = 'MXN') {
   const params = new URLSearchParams({ currency });
   return request(`${REPORT_URL}/summary-table?${params}`, 'Failed to fetch report table');
+}
+
+/** Estado del mes (y los dos anteriores): dinero para gastos, gastado, excedido. */
+export function fetchMonthStatus(month, currency = 'MXN') {
+  const params = new URLSearchParams({ currency });
+  if (month) params.set('month', month);
+  return request(`${REPORT_URL}/month-status?${params}`, 'Failed to fetch month status');
+}
+
+export function fetchNotifications(currency = 'MXN') {
+  const params = new URLSearchParams({ currency });
+  return request(`/api/notificaciones?${params}`, 'Failed to fetch notifications');
 }
 
 export function fetchIncomes() {

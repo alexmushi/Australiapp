@@ -4,13 +4,20 @@ I made Australiapp as a simple way to track my expenses while I'm studying abroa
 It provides a Node.js/Express REST API and a React frontend.
 
 ## Features
-- User authentication and authorization
+- Login with signed session tokens; every API route except login requires a session
 - Monthly budget from income: enter what you earned last month and it is split into
   30% to invest, 20% to save and 50% for spending
 - Every expense, whatever its category, is subtracted from that same 50%
-- Categories to classify expenses, multiple currencies
-- Reports: available vs. spent, breakdown by category and a monthly history table
-- Updated currency exchange rates using cron jobs with exchangerate API
+- Expense form shows what is left this month, what is left after the expense, and
+  warns if you went over the 50% two months in a row
+- In-app notifications (missing income, 80% used, over budget, spending too fast,
+  two months over)
+- Read-only reviewer accounts the owner can create and remove
+- Categories to classify expenses (create, rename, delete when unused)
+- Reports: available vs. spent, month progress, breakdown by category, monthly bar
+  chart and a monthly history table
+- Multiple currencies; each expense/income is converted with the exchange rate of
+  its own date (daily rate history), so future rate changes do not rewrite history
 
 ## Deployment
 
@@ -49,10 +56,19 @@ DB_PORT=3306
 DB_USER=myuser
 DB_PASS=mypassword
 DB_NAME=mydatabase
+AUTH_SECRET=a-long-random-string
+EXCHANGE_RATE_API_KEY=your-exchangerate-host-key
 ```
+`AUTH_SECRET` signs login sessions. Generate one with
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+If it is missing, a temporary secret is used and everyone is logged out whenever the
+backend restarts.
 
-The `ingresos` table is created automatically the first time the backend starts.
+New tables (`ingresos`, `divisas_historial`) are created automatically when the backend
+starts; existing tables are not modified. On startup the backend also records today's
+exchange rates; older expenses are converted with the first recorded rate.
 Old per-category budgets (`presupuestos`) are no longer used but are left untouched.
+After upgrading, log in again (sessions saved by older versions have no token).
 
 ### 5. Run the app
 Start the backend in one terminal:
@@ -74,7 +90,8 @@ From the repository root (after installing dependencies in `back` and `front`):
 ```bash
 npm test
 ```
-This runs the backend suite (income split, reports, month boundaries, validation) and the frontend suite
+This runs the backend suite (income split, reports, month boundaries, exchange-rate history,
+authentication and permissions, validation) and the frontend suite
 (money/date utilities, API contract, forms, login and dashboard) with Vitest. Run them after
 every change. Individual suites: `npm test --prefix back` / `npm test --prefix front`.
 

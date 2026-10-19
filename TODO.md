@@ -8,10 +8,10 @@
 - [ ] Poder ver un histórico de las tablas (al mostrar el tab de "restaurantes", mostrar gráficas de barras de todos los meses. Si quieres más detalles, dar clic en el mes para ver la de pie)
 - [ ] Checar bug: Registré un gasto el 1 de julio y me lo marcó como parte de junio
 - [x] Página HTTPS
-- [ ] Agregar vista de calendario en fecha de registro gasto
-- [ ] Mostrar nombre de gasto en vez de "Gasto 1"
+- [x] Agregar vista de calendario en fecha de registro gasto
+- [x] Mostrar nombre de gasto en vez de "Gasto 1"
 - [x] Que NADIE pueda hacer cambios sin la contraseña
-- [ ] Agilizar modales de estatus
+- [x] Agilizar modales de estatus
 - [ ] Recordar selección de categoría en registrar gasto
 - [ ] Agregar tabla de rubros al elegir categorías
 - [ ] Barra de progreso del mes

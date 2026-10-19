@@ -1,5 +1,5 @@
-import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { ToastProvider } from './components/ui/Toast.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 // import RegisterPage from './pages/RegisterPage.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -17,7 +17,9 @@ function Content() {
 export default function App() {
   return (
     <AuthProvider>
-      <Content />
+      <ToastProvider>
+        <Content />
+      </ToastProvider>
     </AuthProvider>
   );
 }

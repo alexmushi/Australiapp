@@ -63,5 +63,14 @@ npm run dev
 
 The backend runs on http://localhost:3000 and the frontend on http://localhost:5173 by default.
 
+### 6. Run the tests
+From the repository root (after installing dependencies in `back` and `front`):
+```bash
+npm test
+```
+This runs the backend suite (report, category and expense services) and the frontend suite
+(money/date utilities, API contract, forms, login and dashboard) with Vitest. Run them after
+every change. Individual suites: `npm test --prefix back` / `npm test --prefix front`.
+
 
 NOTE: I added the functionality to add more users but commented it all because the website is only used by myself.

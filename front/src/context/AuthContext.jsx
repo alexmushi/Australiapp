@@ -1,33 +1,51 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext } from 'react';
+import PropTypes from 'prop-types';
 import { loginUser, /* registerUser, */ updateUserCurrency } from '../services/api.js';
 
 const AuthContext = createContext(null);
+const LOCAL_KEY = 'auth_user';
+
+function readStoredUser() {
+  try {
+    const stored = localStorage.getItem(LOCAL_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (e) {
+    console.error('Failed to parse stored user', e);
+    try {
+      localStorage.removeItem(LOCAL_KEY);
+    } catch {
+      // almacenamiento no disponible
+    }
+    return null;
+  }
+}
+
+function writeStoredUser(user) {
+  try {
+    if (user) localStorage.setItem(LOCAL_KEY, JSON.stringify(user));
+    else localStorage.removeItem(LOCAL_KEY);
+  } catch {
+    // almacenamiento no disponible (modo privado, etc.)
+  }
+}
+
+function isRemembered() {
+  try {
+    return localStorage.getItem(LOCAL_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const LOCAL_KEY = 'auth_user';
-
-  useEffect(() => {
-    const stored = localStorage.getItem(LOCAL_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      } catch (e) {
-        console.error('Failed to parse stored user', e);
-        localStorage.removeItem(LOCAL_KEY);
-      }
-    }
-  }, []);
+  // Se lee de forma síncrona para no mostrar el login un instante al recargar.
+  const [user, setUser] = useState(readStoredUser);
 
   const login = async (username, password, remember = false) => {
     const u = await loginUser({ username, password });
     setUser(u);
-    if (remember) {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(u));
-    }
+    if (remember) writeStoredUser(u);
   };
-
 
   // const register = async (data) => {
   //   const u = await registerUser(data);
@@ -38,14 +56,12 @@ export function AuthProvider({ children }) {
     if (!user) return;
     const updated = await updateUserCurrency(user.id, code);
     setUser(updated);
-    if (localStorage.getItem(LOCAL_KEY)) {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
-    }
+    if (isRemembered()) writeStoredUser(updated);
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(LOCAL_KEY);
+    writeStoredUser(null);
   };
 
   return (
@@ -54,6 +70,8 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
+
+AuthProvider.propTypes = { children: PropTypes.node };
 
 export function useAuth() {
   return useContext(AuthContext);

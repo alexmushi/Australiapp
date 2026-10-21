@@ -65,7 +65,19 @@ If it is missing, a temporary secret is used and everyone is logged out whenever
 backend restarts.
 
 New tables (`ingresos`, `divisas_historial`) are created automatically when the backend
-starts; existing tables are not modified. On startup the backend also records today's
+starts; existing tables are not modified. You can also run it on its own:
+```bash
+cd back
+npm run migrate      # creates missing tables and lists what exists
+```
+If the MySQL user in `.env` cannot create tables, run `back/db/new-tables.sql` once with an
+admin user (e.g. in MySQL Workbench). The backend refuses to start while a table is missing.
+
+To share your database structure (no data, no row counts):
+```bash
+cd back
+npm run db:schema    # writes back/db/schema-actual.sql
+``` On startup the backend also records today's
 exchange rates; older expenses are converted with the first recorded rate.
 Old per-category budgets (`presupuestos`) are no longer used but are left untouched.
 After upgrading, log in again (sessions saved by older versions have no token).

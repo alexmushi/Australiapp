@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
-    "start": "node index.js"
+    "start": "node index.js",
+    "migrate": "node db/runMigrate.js",
+    "db:schema": "node db/exportSchema.js"
   },
   "keywords": [],
   "author": "",

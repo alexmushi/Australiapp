@@ -1,32 +1,29 @@
-import express from 'express';
-import cors from 'cors';
-import { testConnection, sequelize } from './config/index.js';
-import authRoutes from './routes/auth.routes.js';
-import reviewerRoutes from './routes/reviewers.routes.js';
-import categoriaRoutes from './routes/categorias.routes.js';
-import usuarioRoutes from './routes/usuarios.routes.js';
-import divisaRoutes from './routes/divisas.routes.js';
-import gastoRoutes from './routes/gastos.routes.js';
-import reportRoutes from './routes/reports.routes.js';
+import { testConnection } from './config/index.js';
+import { app } from './app.js';
 import { startRecurringExpenseJob } from './cron/recurringExpenses.js';
 import { startDivisaUpdateJob } from './cron/updateDivisas.js';
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// Rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/reviewers', reviewerRoutes);
-app.use('/api/categorias', categoriaRoutes);
-app.use('/api/users', usuarioRoutes);
-app.use('/api/divisas', divisaRoutes);
-app.use('/api/gastos', gastoRoutes);
-app.use('/api/reports', reportRoutes);
+import { ensureRateSnapshot } from './services/divisaService.js';
+import { explainMigrationError, migrate } from './db/migrate.js';
 
 async function start() {
   await testConnection();
-  await sequelize.sync();
+
+  // Crea las tablas que falten. Si no se puede, no arranca: mejor un error
+  // claro aquí que errores "Table doesn't exist" en cada petición.
+  try {
+    const { missing } = await migrate();
+    if (missing.length) {
+      console.error(`❌ Faltan tablas en la base de datos: ${missing.join(', ')}`);
+      console.error('   Ejecuta back/db/new-tables.sql o revisa DB_NAME en back/.env.');
+      process.exit(1);
+    }
+    console.log('✔️ Tablas verificadas');
+  } catch (err) {
+    console.error('❌ No se pudieron crear las tablas:', explainMigrationError(err));
+    process.exit(1);
+  }
+
+  await ensureRateSnapshot().catch((err) => console.error('No se pudo guardar el tipo de cambio de hoy', err));
   startRecurringExpenseJob();
   startDivisaUpdateJob();
   const port = process.env.PORT || 3000;

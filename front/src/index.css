@@ -1,88 +1,169 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Every color the UI uses is a role defined here, with light and
+ * dark values; components only reference the Tailwind utilities generated from
+ * these roles (bg-surface, text-muted, border-line, ...).
+ */
 :root {
-  color-scheme: dark;
-  --md-sys-color-primary: #2196f3;
-  --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-secondary: #03dac6;
-  --md-sys-color-on-secondary: #000000;
-  --md-sys-color-background: #121212;
-  --md-sys-color-on-background: #ffffff;
-  --md-sys-color-surface: #1e1e1e;
-  --md-sys-color-on-surface: #ffffff;
-  --md-sys-color-error: #cf6679;
-  --md-sys-color-outline: #8c8c8c;
-  /* Dropdown theming */
-  --md-menu-container-color: var(--md-sys-color-surface);
-  --md-menu-item-container-color: var(--md-sys-color-surface);
-  --md-menu-item-label-text-color: var(--md-sys-color-on-surface);
-  --md-menu-item-selected-container-color: var(--md-sys-color-primary);
+  color-scheme: light;
+  --app-bg: #f6f7f9;
+  --app-surface: #ffffff;
+  --app-surface-2: #f1f3f6;
+  --app-line: #e3e6eb;
+  --app-line-strong: #cdd2da;
+  --app-ink: #0f1419;
+  --app-ink-2: #475161;
+  --app-muted: #6b7482;
+  --app-primary: #2a6fdb;
+  --app-primary-hover: #1f5fc4;
+  --app-primary-soft: #e8f0fc;
+  --app-on-primary: #ffffff;
+  --app-good: #13795b;
+  --app-good-soft: #e6f4ee;
+  --app-bad: #c62f2f;
+  --app-bad-soft: #fcebeb;
+  --app-warn: #a15c00;
+  --app-warn-soft: #fff4e0;
+  --app-track: #e9ecf0;
+  --app-shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.06);
 
-  --md-outlined-select-text-field-input-text-color: var(--md-sys-color-on-surface);
-  --md-outlined-select-text-field-label-text-color: var(--md-sys-color-on-surface);
-  --md-outlined-select-text-field-leading-icon-color: var(--md-sys-color-on-surface);
-  --md-outlined-select-text-field-trailing-icon-color: var(--md-sys-color-on-surface);
-  --md-outlined-select-text-field-outline-color: var(--md-sys-color-outline);
-  --md-outlined-select-text-field-hover-outline-color: var(--md-sys-color-on-surface);
-  --md-outlined-select-text-field-focus-outline-color: var(--md-sys-color-primary);
+  /* Chart series (validated categorical order) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+  --series-other: #9aa1ac;
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  background-color: var(--md-sys-color-background);
-  color: var(--md-sys-color-on-background);
-  min-height: 100vh;
-}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --app-bg: #0e0f12;
+    --app-surface: #17181c;
+    --app-surface-2: #1f2126;
+    --app-line: #2a2d33;
+    --app-line-strong: #3a3e46;
+    --app-ink: #eef0f3;
+    --app-ink-2: #c1c6cf;
+    --app-muted: #8b919c;
+    --app-primary: #4c8df0;
+    --app-primary-hover: #6aa1f3;
+    --app-primary-soft: #1a2a44;
+    --app-on-primary: #ffffff;
+    --app-good: #3ccf91;
+    --app-good-soft: #10291f;
+    --app-bad: #f07171;
+    --app-bad-soft: #341617;
+    --app-warn: #f2b84b;
+    --app-warn-soft: #33270f;
+    --app-track: #262930;
+    --app-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
 
-input,
-button {
-  font-family: inherit;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  z-index: 0;
-}
-
-@keyframes bounceAnim {
-  0%,
-  100% {
-    transform: translateY(0);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --series-other: #6b717c;
   }
-  50% {
-    transform: translateY(-30px);
+}
+
+@theme inline {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-bg: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-line: var(--app-line);
+  --color-line-strong: var(--app-line-strong);
+  --color-ink: var(--app-ink);
+  --color-ink-2: var(--app-ink-2);
+  --color-muted: var(--app-muted);
+  --color-primary: var(--app-primary);
+  --color-primary-hover: var(--app-primary-hover);
+  --color-primary-soft: var(--app-primary-soft);
+  --color-on-primary: var(--app-on-primary);
+  --color-good: var(--app-good);
+  --color-good-soft: var(--app-good-soft);
+  --color-bad: var(--app-bad);
+  --color-bad-soft: var(--app-bad-soft);
+  --color-warn: var(--app-warn);
+  --color-warn-soft: var(--app-warn-soft);
+  --color-track: var(--app-track);
+  --shadow-card: var(--app-shadow);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--app-bg);
+    color: var(--app-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--app-primary);
+    outline-offset: 2px;
+  }
+
+  /* Native month/date pickers follow the theme */
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='month']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
   }
 }
 
-.bounce {
-  animation: bounceAnim 6s ease-in-out infinite alternate;
-}
+@layer components {
+  /* Historical table: sticky first column + crosshair highlight */
+  .crosshair-table th,
+  .crosshair-table td {
+    border-bottom: 1px solid var(--app-line);
+  }
 
-.bounce-slow {
-  animation: bounceAnim 10s ease-in-out infinite alternate;
-}
+  .crosshair-table .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: var(--app-surface);
+    box-shadow: inset -1px 0 0 var(--app-line);
+  }
 
-input[type="text"],
-input[type="password"],
-textarea {
-  color: var(--md-sys-color-on-surface);
-}
+  .crosshair-table tbody tr:hover > *,
+  .crosshair-table .col-hover {
+    background-color: var(--app-primary-soft);
+  }
 
-.crosshair-table td.sticky-col,
-.crosshair-table th.sticky-col {
-  position: sticky;
-  left: 0;
-  background-color: var(--md-sys-color-background);
-  z-index: 1;
-}
+  .crosshair-table tbody tr:hover > .sticky-col {
+    background-color: var(--app-primary-soft);
+  }
 
-.crosshair-table tbody tr:hover > *:not(.sticky-col) {
-  background-color: rgba(144, 202, 249, 0.2);
-}
-
-.crosshair-table .col-hover {
-  background-color: rgba(144, 202, 249, 0.2);
+  .crosshair-table .group-start {
+    border-left: 1px solid var(--app-line);
+  }
 }
 
 @keyframes spin {
@@ -91,12 +172,23 @@ textarea {
   }
 }
 
-.spinner {
-  border: 4px solid var(--md-sys-color-outline);
-  border-top-color: var(--md-sys-color-primary);
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  animation: spin 1s linear infinite;
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
+.animate-toast-in {
+  animation: toast-in 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in {
+    animation: none;
+  }
+}

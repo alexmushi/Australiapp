@@ -1,10 +1,26 @@
-import { addReviewer } from '../services/reviewerService.js';
+import { createReviewer, deleteReviewer, listReviewers } from '../services/reviewerService.js';
+import { sendError } from '../utils/errors.js';
 
-export async function createReviewer(req, res) {
+export async function listReviewersController(req, res) {
   try {
-    const relation = await addReviewer(req.body);
-    res.json(relation);
+    res.json(await listReviewers(req.user.id));
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    sendError(res, err);
+  }
+}
+
+export async function createReviewerController(req, res) {
+  try {
+    res.json(await createReviewer(req.user, req.body));
+  } catch (err) {
+    sendError(res, err);
+  }
+}
+
+export async function deleteReviewerController(req, res) {
+  try {
+    res.json(await deleteReviewer(req.user.id, req.params.id));
+  } catch (err) {
+    sendError(res, err);
   }
 }

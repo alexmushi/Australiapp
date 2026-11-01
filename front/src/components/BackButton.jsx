@@ -1,18 +1,20 @@
-import React from 'react';
+import PropTypes from 'prop-types';
+import { LuArrowLeft } from 'react-icons/lu';
 
 /**
- * Simple back button with an arrow icon.
- * @param {{onClick: function, className?: string}} props
+ * Botón de regresar con flecha.
  */
 export default function BackButton({ onClick, className = '' }) {
   return (
     <button
       type='button'
       onClick={onClick}
-      className={`flex items-center text-primary hover:underline ${className}`}
+      className={`inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline ${className}`}
     >
-      <span className='mr-1'>&larr;</span>
+      <LuArrowLeft aria-hidden />
       Regresar
     </button>
   );
 }
+
+BackButton.propTypes = { onClick: PropTypes.func, className: PropTypes.string };

@@ -1,5 +1,66 @@
+// Las fechas de los gastos se registran en hora de Sídney.
+export const APP_TIME_ZONE = 'Australia/Sydney';
+
+/**
+ * Convierte una fecha ISO ('2025-07-01' o '2025-07-01T00:00:00.000Z') a dd/mm/aaaa.
+ * Usa solo la parte de fecha para no desplazar el día por la zona horaria.
+ */
 export const formatDate = (isoDate) => {
   if (!isoDate) return '';
-  const [year, month, day] = isoDate.split('-');
+  const str = isoDate instanceof Date ? isoDate.toISOString() : String(isoDate);
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(str);
+  if (!match) return '';
+  const [, year, month, day] = match;
   return `${day}/${month}/${year}`;
 };
+
+/** Fecha de hoy (aaaa-mm-dd) en la zona horaria indicada. */
+export const todayISO = (timeZone = APP_TIME_ZONE, now = new Date()) =>
+  now.toLocaleDateString('en-CA', { timeZone });
+
+/** Mes actual (aaaa-mm) en la zona horaria indicada. */
+export const currentMonthISO = (timeZone = APP_TIME_ZONE, now = new Date()) =>
+  todayISO(timeZone, now).slice(0, 7);
+
+/** true si el texto es una fecha de calendario real con formato aaaa-mm-dd. */
+export const isValidISODate = (value) => {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return (
+    date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d
+  );
+};
+
+const MONTHS_SHORT = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+const MONTHS_LONG = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+
+export const monthShort = (m) => MONTHS_SHORT[m - 1] ?? '';
+
+/** '2025-07' -> 'julio 2025' */
+export const monthLabel = (monthISO) => {
+  const [y, m] = String(monthISO).split('-').map(Number);
+  if (!y || !m || m < 1 || m > 12) return '';
+  return `${MONTHS_LONG[m - 1]} ${y}`;
+};
+
+
+/** Mes anterior a '2025-07' -> '2025-06'. */
+export function shiftMonth(monthISO, delta) {
+  const [y, m] = String(monthISO).split('-').map(Number);
+  const total = y * 12 + (m - 1) + delta;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`;
+}
+
+/** { year, month } -> '2025-07' */
+export const toMonthISO = ({ year, month }) => `${year}-${String(month).padStart(2, '0')}`;
+
+/** Día actual y días del mes en curso (hora de Sídney). */
+export function monthProgress(timeZone = APP_TIME_ZONE, now = new Date()) {
+  const [y, m, d] = todayISO(timeZone, now).split('-').map(Number);
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return { day: d, days, percentage: (d / days) * 100, daysLeft: days - d + 1 };
+}

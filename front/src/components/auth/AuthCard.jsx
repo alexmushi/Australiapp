@@ -1,15 +1,9 @@
-import BackButton from '../BackButton';
+import PropTypes from 'prop-types';
+import BackButton from '../BackButton.jsx';
+import Logo from '../ui/Logo.jsx';
 
 /**
- * Componente de tarjeta de autenticación con elementos decorativos adaptables
- *
- * @param {object} props0 - Propiedades del componente
- * @param {string} props0.title - Título de la tarjeta
- * @param {string} props0.description - Descripción de la tarjeta
- * @param {boolean} props0.showBackButton - Indica si se debe mostrar el botón de regresar
- * @param {Function} props0.onBack - Función que se ejecuta al hacer click en el botón de regresar
- * @param {React.ReactNode} props0.children - Componentes hijos de la tarjeta
- * @returns {React.ReactNode} El contenido de la tarjeta de autenticación
+ * Tarjeta centrada para las pantallas de autenticación.
  */
 export default function AuthCard({
   title = 'Título',
@@ -19,36 +13,30 @@ export default function AuthCard({
   children,
 }) {
   return (
-    <div
-      className="
-        flex justify-center items-center w-full min-h-screen
-        p-4 bg-background relative overflow-hidden
-      "
-    >
-      <div
-        className="
-          w-full max-w-lg
-          rounded-lg overflow-hidden shadow-lg relative z-10 bg-surface
-        "
-      >
-        <div className="flex flex-col w-full h-full p-6 sm:p-8 md:p-10">
+    <main className='flex min-h-dvh w-full items-center justify-center bg-bg px-4 py-10'>
+      <div className='w-full max-w-sm'>
+        <div className='mb-8 flex justify-center'>
+          <Logo />
+        </div>
+        <div className='rounded-2xl border border-line bg-surface p-6 shadow-card sm:p-8'>
           {showBackButton && (
-            <div className="mb-4">
-              <BackButton onClick={onBack} className="cursor-pointer" />
+            <div className='mb-4'>
+              <BackButton onClick={onBack} />
             </div>
           )}
-          <h1
-            className="
-              text-2xl sm:text-3xl font-semibold
-              text-gray-100 mb-2 font-serif
-            "
-          >
-            {title}
-          </h1>
-          <p className="mb-4 text-gray-300 text-sm sm:text-base">{description}</p>
+          <h1 className='text-xl font-semibold tracking-tight text-ink'>{title}</h1>
+          <p className='mt-1 mb-6 text-sm text-muted'>{description}</p>
           {children}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
+
+AuthCard.propTypes = {
+  title: PropTypes.string,
+  description: PropTypes.string,
+  showBackButton: PropTypes.bool,
+  onBack: PropTypes.func,
+  children: PropTypes.node,
+};

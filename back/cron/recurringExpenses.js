@@ -2,15 +2,21 @@ import cron from 'node-cron';
 import { Op } from 'sequelize';
 import { Gasto } from '../models/gasto.model.js';
 
-function addPeriod(date, type) {
+// Las fechas se guardan como medianoche UTC; se suman periodos en UTC para que
+// la zona horaria del servidor no desplace el día (antes 1 jul + 1 mes = 31 jul
+// en servidores con zona horaria negativa).
+export function addPeriod(date, type) {
   const d = new Date(date);
+  const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   if (type === 'weekly') {
-    d.setDate(d.getDate() + 7);
-  } else {
-    d.setMonth(d.getMonth() + 1);
+    start.setUTCDate(start.getUTCDate() + 7);
+    return start;
   }
-  // normalize to YYYY-MM-DD for comparison
-  return new Date(d.toISOString().split('T')[0]);
+  // Mensual: mismo día del mes siguiente, o el último día si no existe (31 ene -> 28 feb).
+  const y = start.getUTCFullYear();
+  const m = start.getUTCMonth() + 1;
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m, Math.min(start.getUTCDate(), lastDay)));
 }
 
 export function startRecurringExpenseJob() {

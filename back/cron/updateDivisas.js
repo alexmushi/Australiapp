@@ -6,7 +6,6 @@ export function startDivisaUpdateJob() {
     // Cambiar a 0 1 * * * para ejecutar diariamente a la 1 AM
     try {
       const API_KEY = process.env.EXCHANGE_RATE_API_KEY;
-      console.log(API_KEY)
 
       // Using the live endpoint with official syntax
       const response = await fetch(
